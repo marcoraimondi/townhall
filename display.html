@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Townhall Display</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700;900&family=Roboto:wght@400;500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Roboto Condensed', Arial, sans-serif;
+    background: #050510;
+    color: #fff;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* TOP BAR */
+  .topbar {
+    background: linear-gradient(90deg, #0d1f4a 0%, #1a3a8a 50%, #0d1f4a 100%);
+    border-bottom: 3px solid #2a5fd8;
+    padding: 10px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .topbar-logo {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #fff;
+  }
+  .topbar-logo span { color: #4a90e2; }
+  .topbar-live {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #ff4444;
+    letter-spacing: 2px;
+  }
+  .live-dot {
+    width: 10px; height: 10px;
+    background: #ff4444;
+    border-radius: 50%;
+    animation: blink 1s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  .topbar-count { font-size: 13px; color: #aaa; }
+  .topbar-count strong { color: #4a90e2; font-size: 18px; }
+
+  /* MAIN AREA */
+  .main { flex: 1; display: flex; flex-direction: column; padding: 24px 48px 0; overflow: hidden; }
+
+  /* WAITING */
+  #waiting-display {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+  #waiting-display h2 { font-size: 36px; color: #4a90e2; letter-spacing: 4px; text-transform: uppercase; }
+  #waiting-display p { color: #666; font-size: 18px; }
+  .scan-url { font-size: 22px; color: #fff; background: #111a2e; border: 2px solid #2a5fd8; border-radius: 12px; padding: 12px 28px; letter-spacing: 2px; }
+
+  /* QUESTION */
+  #question-display { display: none; flex: 1; flex-direction: column; }
+  .q-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .q-badge {
+    background: #2a5fd8;
+    border-radius: 8px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .q-text-display {
+    font-size: 34px;
+    font-weight: 900;
+    line-height: 1.3;
+    flex: 1;
+  }
+
+  /* BARS */
+  .bars { display: flex; flex-direction: column; gap: 14px; flex: 1; justify-content: center; }
+  .bar-row { display: flex; align-items: center; gap: 16px; }
+  .bar-letter {
+    width: 44px; height: 44px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 20px;
+    flex-shrink: 0;
+  }
+  .bar-label { width: 260px; font-size: 17px; font-weight: 500; flex-shrink: 0; line-height: 1.2; }
+  .bar-track { flex: 1; background: #111a2e; border-radius: 6px; height: 42px; overflow: hidden; position: relative; }
+  .bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+  }
+  .bar-fill.fill-a { background: linear-gradient(90deg, #c8372d, #e05a50); }
+  .bar-fill.fill-b { background: linear-gradient(90deg, #2d8a4e, #4aad6e); }
+  .bar-fill.fill-c { background: linear-gradient(90deg, #c88a2d, #e0aa4a); }
+  .bar-fill.fill-d { background: linear-gradient(90deg, #2d6ac8, #4a90e2); }
+  .letter-a { background: #c8372d; }
+  .letter-b { background: #2d8a4e; }
+  .letter-c { background: #c88a2d; }
+  .letter-d { background: #2d6ac8; }
+  .bar-count { width: 60px; text-align: right; font-size: 22px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .bar-pct { width: 56px; text-align: right; font-size: 18px; color: #aaa; flex-shrink: 0; }
+
+  /* TICKER / SENTIMENT BAR */
+  .ticker-bar {
+    height: 48px;
+    background: #0a1428;
+    border-top: 2px solid #1a3a6e;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 0 20px;
+    gap: 20px;
+    margin-top: 16px;
+  }
+  .ticker-label { font-size: 12px; color: #4a90e2; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; flex-shrink: 0; }
+  .sentiment-track {
+    flex: 1;
+    height: 12px;
+    background: #111a2e;
+    border-radius: 6px;
+    position: relative;
+    overflow: visible;
+  }
+  .sentiment-fill {
+    height: 100%;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #4a90e2, #f0c040, #ff6644);
+    transition: width 0.8s ease;
+  }
+  .sentiment-marker {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 24px;
+    transition: left 0.8s ease;
+    filter: drop-shadow(0 0 6px rgba(255,255,255,0.5));
+  }
+  .sentiment-emojis {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    position: absolute;
+    top: 20px;
+    font-size: 11px;
+    color: #555;
+  }
+  .sentiment-wrapper { flex: 1; position: relative; padding-bottom: 20px; }
+  .sentiment-avg { font-size: 14px; color: #f0c040; font-weight: 700; flex-shrink: 0; }
+  .ticker-voters { font-size: 13px; color: #666; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">Townhall <span>Strategy</span></div>
+  <div class="topbar-live"><div class="live-dot"></div>LIVE</div>
+  <div class="topbar-count">Votanti: <strong id="voter-count">0</strong></div>
+</div>
+
+<div class="main">
+  <div id="waiting-display">
+    <h2>In attesa...</h2>
+    <p>Il conduttore attiverà la prossima domanda</p>
+    <div class="scan-url">townhall.fastweb.it</div>
+  </div>
+
+  <div id="question-display">
+    <div class="q-header">
+      <div class="q-badge" id="disp-q-number">Domanda 1</div>
+      <div class="q-text-display" id="disp-q-text"></div>
+    </div>
+    <div class="bars" id="disp-bars"></div>
+  </div>
+</div>
+
+<div class="ticker-bar">
+  <div class="ticker-label">Mood sala</div>
+  <div class="sentiment-wrapper">
+    <div class="sentiment-track">
+      <div class="sentiment-fill" id="sent-fill" style="width:50%"></div>
+      <div class="sentiment-marker" id="sent-marker" style="left:50%">😐</div>
+    </div>
+    <div class="sentiment-emojis">
+      <span>😴</span><span>😐</span><span>🙂</span><span>😄</span><span>🔥</span>
+    </div>
+  </div>
+  <div class="sentiment-avg" id="sent-avg">-</div>
+  <div class="ticker-voters" id="sent-voters">0 risposte</div>
+</div>
+
+<script type="module">
+import { db } from './firebase.js';
+import { ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const EMOJIS = ['😴','😐','🙂','😄','🔥'];
+const LETTERS = ['A','B','C','D'];
+const FILLS = ['fill-a','fill-b','fill-c','fill-d'];
+const LCLASSES = ['letter-a','letter-b','letter-c','letter-d'];
+
+let currentQid = null;
+
+// Active question
+onValue(ref(db,'active_question'), snap => {
+  const qid = snap.val();
+  if (!qid) {
+    document.getElementById('waiting-display').style.display = 'flex';
+    document.getElementById('question-display').style.display = 'none';
+    currentQid = null;
+    return;
+  }
+  if (qid !== currentQid) {
+    currentQid = qid;
+    loadQuestion(qid);
+  }
+});
+
+async function loadQuestion(qid) {
+  const qSnap = await get(ref(db,'questions/'+qid));
+  const q = qSnap.val();
+  if (!q) return;
+  document.getElementById('waiting-display').style.display = 'none';
+  const qd = document.getElementById('question-display');
+  qd.style.display = 'flex';
+  document.getElementById('disp-q-number').textContent = 'Domanda ' + (q.index||'');
+  document.getElementById('disp-q-text').textContent = q.text;
+  const barsEl = document.getElementById('disp-bars');
+  barsEl.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `
+      <div class="bar-letter ${LCLASSES[i]}">${LETTERS[i]}</div>
+      <div class="bar-label">${opt}</div>
+      <div class="bar-track"><div class="bar-fill ${FILLS[i]}" id="bar-${i}" style="width:0%"></div></div>
+      <div class="bar-count" id="cnt-${i}">0</div>
+      <div class="bar-pct" id="pct-${i}">0%</div>`;
+    barsEl.appendChild(row);
+  });
+  // Listen to votes
+  onValue(ref(db,'votes/'+qid), snap => {
+    const votes = snap.val() || {};
+    const counts = new Array(q.options.length).fill(0);
+    Object.values(votes).forEach(v => { if (v < counts.length) counts[v]++; });
+    const total = counts.reduce((a,b)=>a+b,0);
+    document.getElementById('voter-count').textContent = total;
+    counts.forEach((c,i) => {
+      const pct = total ? Math.round(c/total*100) : 0;
+      document.getElementById('bar-'+i).style.width = pct+'%';
+      document.getElementById('cnt-'+i).textContent = c;
+      document.getElementById('pct-'+i).textContent = pct+'%';
+    });
+  });
+}
+
+// Sentiment
+onValue(ref(db,'sentiment'), snap => {
+  const data = snap.val() || {};
+  const vals = Object.values(data).map(d => d.value || d).filter(v => v>=1&&v<=5);
+  if (!vals.length) return;
+  const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
+  const pct = ((avg-1)/4)*100;
+  const emoji = EMOJIS[Math.round(avg)-1] || '😐';
+  document.getElementById('sent-fill').style.width = pct+'%';
+  document.getElementById('sent-marker').style.left = pct+'%';
+  document.getElementById('sent-marker').textContent = emoji;
+  document.getElementById('sent-avg').textContent = avg.toFixed(1) + ' / 5';
+  document.getElementById('sent-voters').textContent = vals.length + ' risposte';
+});
+</script>
+</body>
+</html>
