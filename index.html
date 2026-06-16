@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Townhall Vote</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #0a0a1a;
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 20px 16px 40px;
+  }
+  .logo {
+    font-size: 13px;
+    color: #888;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    margin-top: 8px;
+  }
+  #waiting {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 16px;
+    text-align: center;
+    min-height: 60vh;
+  }
+  #waiting .pulse {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: #1a3a6e;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.2); opacity: 1; }
+  }
+  #waiting p { color: #888; font-size: 15px; }
+
+  #vote-section { display: none; width: 100%; max-width: 480px; }
+  .question-box {
+    background: #111a2e;
+    border: 1px solid #1e3a6e;
+    border-radius: 16px;
+    padding: 24px 20px;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  .q-number { font-size: 12px; color: #4a7fd4; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+  .q-text { font-size: 20px; font-weight: 700; line-height: 1.4; }
+
+  .options { display: flex; flex-direction: column; gap: 12px; }
+  .opt-btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #111a2e;
+    border: 2px solid #1e3a6e;
+    border-radius: 14px;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 500;
+    width: 100%;
+  }
+  .opt-btn:hover { border-color: #4a7fd4; background: #162040; }
+  .opt-btn.selected { border-color: #4a7fd4; background: #1a3a6e; }
+  .opt-btn.voted-a { border-color: #c8372d; background: rgba(200,55,45,0.2); }
+  .opt-btn.voted-b { border-color: #2d8a4e; background: rgba(45,138,78,0.2); }
+  .opt-btn.voted-c { border-color: #c88a2d; background: rgba(200,138,45,0.2); }
+  .opt-btn.voted-d { border-color: #2d6ac8; background: rgba(45,106,200,0.2); }
+  .opt-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+  .letter {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 15px;
+    flex-shrink: 0;
+  }
+  .letter-a { background: #c8372d; }
+  .letter-b { background: #2d8a4e; }
+  .letter-c { background: #c88a2d; }
+  .letter-d { background: #2d6ac8; }
+
+  .voted-msg {
+    display: none;
+    text-align: center;
+    margin-top: 20px;
+    color: #4a7fd4;
+    font-size: 15px;
+    animation: fadeIn 0.4s;
+  }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+
+  /* SENTIMENT */
+  #sentiment-section {
+    width: 100%;
+    max-width: 480px;
+    margin-top: 28px;
+    background: #111a2e;
+    border: 1px solid #1e3a6e;
+    border-radius: 16px;
+    padding: 20px;
+  }
+  #sentiment-section h3 { font-size: 14px; color: #888; text-align: center; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px; }
+  .emoji-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .emoji-btn {
+    flex: 1;
+    background: #0a0a1a;
+    border: 2px solid #1e3a6e;
+    border-radius: 12px;
+    padding: 12px 4px;
+    font-size: 28px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .emoji-btn:hover { border-color: #4a7fd4; transform: scale(1.1); }
+  .emoji-btn.active { border-color: #f0c040; background: rgba(240,192,64,0.15); transform: scale(1.15); }
+  .sentiment-label { text-align: center; font-size: 12px; color: #666; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="logo">Townhall Strategy</div>
+
+<div id="waiting">
+  <div class="pulse"></div>
+  <p>In attesa della prossima domanda...</p>
+</div>
+
+<div id="vote-section">
+  <div class="question-box">
+    <div class="q-number" id="q-number">Domanda 1</div>
+    <div class="q-text" id="q-text"></div>
+  </div>
+  <div class="options" id="options"></div>
+  <div class="voted-msg" id="voted-msg">✅ Voto registrato!</div>
+</div>
+
+<div id="sentiment-section">
+  <h3>Come ti senti?</h3>
+  <div class="emoji-row">
+    <button class="emoji-btn" data-val="1" onclick="voteSentiment(1)">😴</button>
+    <button class="emoji-btn" data-val="2" onclick="voteSentiment(2)">😐</button>
+    <button class="emoji-btn" data-val="3" onclick="voteSentiment(3)">🙂</button>
+    <button class="emoji-btn" data-val="4" onclick="voteSentiment(4)">😄</button>
+    <button class="emoji-btn" data-val="5" onclick="voteSentiment(5)">🔥</button>
+  </div>
+  <div class="sentiment-label">Il tuo sentiment aggiorna la sala in tempo reale</div>
+</div>
+
+<script type="module">
+import { db } from './firebase.js';
+import { ref, onValue, push, set, get, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const COLORS = ['a','b','c','d'];
+const LETTERS = ['A','B','C','D'];
+let currentQuestionId = null;
+let hasVoted = false;
+let userId = localStorage.getItem('townhall_uid');
+if (!userId) { userId = 'u_' + Math.random().toString(36).substr(2,9); localStorage.setItem('townhall_uid', userId); }
+
+const activeRef = ref(db, 'active_question');
+onValue(activeRef, snap => {
+  const qid = snap.val();
+  if (!qid) {
+    document.getElementById('waiting').style.display = 'flex';
+    document.getElementById('vote-section').style.display = 'none';
+    return;
+  }
+  if (qid !== currentQuestionId) {
+    currentQuestionId = qid;
+    hasVoted = false;
+    loadQuestion(qid);
+  }
+});
+
+async function loadQuestion(qid) {
+  const qSnap = await get(ref(db, 'questions/' + qid));
+  const q = qSnap.val();
+  if (!q) return;
+  document.getElementById('waiting').style.display = 'none';
+  document.getElementById('vote-section').style.display = 'block';
+  document.getElementById('q-number').textContent = 'Domanda ' + (q.index || '');
+  document.getElementById('q-text').textContent = q.text;
+  const opts = document.getElementById('options');
+  opts.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.innerHTML = `<span class="letter letter-${COLORS[i]}">${LETTERS[i]}</span><span>${opt}</span>`;
+    btn.onclick = () => castVote(qid, i, q.options.length);
+    opts.appendChild(btn);
+  });
+  document.getElementById('voted-msg').style.display = 'none';
+  // check if already voted
+  const vSnap = await get(ref(db, 'votes/' + qid + '/' + userId));
+  if (vSnap.exists()) markVoted(vSnap.val());
+}
+
+async function castVote(qid, optIndex, total) {
+  if (hasVoted) return;
+  hasVoted = true;
+  await set(ref(db, 'votes/' + qid + '/' + userId), optIndex);
+  markVoted(optIndex);
+}
+
+function markVoted(optIndex) {
+  document.getElementById('voted-msg').style.display = 'block';
+  const btns = document.querySelectorAll('.opt-btn');
+  btns.forEach((b, i) => {
+    b.classList.add('disabled');
+    if (i === optIndex) b.classList.add('voted-' + COLORS[i]);
+  });
+}
+
+window.voteSentiment = function(val) {
+  set(ref(db, 'sentiment/' + userId), { value: val, ts: Date.now() });
+  document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.emoji-btn[data-val="' + val + '"]').classList.add('active');
+};
+</script>
+</body>
+</html>
