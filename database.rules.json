@@ -1,0 +1,24 @@
+{
+  "rules": {
+    "active_question": {
+      ".read": true,
+      ".write": true
+    },
+    "questions": {
+      ".read": true,
+      ".write": true
+    },
+    "votes": {
+      ".read": true,
+      "$qid": {
+        "$uid": {
+          ".write": "!data.exists()"
+        }
+      }
+    },
+    "sentiment": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}
