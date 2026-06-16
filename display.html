@@ -3,295 +3,450 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Townhall Display</title>
+<title>Townhall Strategy &amp; Transformation</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700;900&family=Roboto:wght@400;500&display=swap');
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Roboto Condensed', Arial, sans-serif;
-    background: #050510;
-    color: #fff;
-    height: 100vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: 'Roboto Condensed', Arial, sans-serif;
+  background: #04080f; color: #fff;
+  height: 100%; overflow: hidden;
+  display: flex; flex-direction: column;
+}
 
-  /* TOP BAR */
-  .topbar {
-    background: linear-gradient(90deg, #0d1f4a 0%, #1a3a8a 50%, #0d1f4a 100%);
-    border-bottom: 3px solid #2a5fd8;
-    padding: 10px 30px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-  }
-  .topbar-logo {
-    font-size: 22px;
-    font-weight: 900;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: #fff;
-  }
-  .topbar-logo span { color: #4a90e2; }
-  .topbar-live {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #ff4444;
-    letter-spacing: 2px;
-  }
-  .live-dot {
-    width: 10px; height: 10px;
-    background: #ff4444;
-    border-radius: 50%;
-    animation: blink 1s infinite;
-  }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
-  .topbar-count { font-size: 13px; color: #aaa; }
-  .topbar-count strong { color: #4a90e2; font-size: 18px; }
+/* TOP BAR */
+.topbar {
+  background: linear-gradient(90deg,#071428 0%,#0d2456 40%,#0a1e4a 100%);
+  border-bottom: 3px solid #1d4ed8;
+  padding: 0 28px; height: 58px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.topbar-left { display:flex; align-items:center; gap:18px; }
+.topbar-logo { font-size:18px; font-weight:900; letter-spacing:2px; text-transform:uppercase; color:#fff; }
+.topbar-logo span { color:#3b82f6; }
+.topbar-divider { width:2px; height:30px; background:#1d4ed8; }
+.topbar-sub { font-size:12px; color:#94a3b8; letter-spacing:2px; text-transform:uppercase; }
+.topbar-right { display:flex; align-items:center; gap:20px; }
+.live-pill { display:flex; align-items:center; gap:7px; background:#dc2626; border-radius:4px; padding:4px 10px; }
+.live-dot { width:7px; height:7px; background:#fff; border-radius:50%; animation:blink 1s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+.live-text { font-size:11px; font-weight:700; letter-spacing:2px; }
+.voter-pill { font-size:12px; color:#94a3b8; }
+.voter-pill strong { color:#fff; font-size:16px; }
 
-  /* MAIN AREA */
-  .main { flex: 1; display: flex; flex-direction: column; padding: 24px 48px 0; overflow: hidden; }
+/* MAIN */
+.main { flex:1; display:flex; overflow:hidden; height:0; min-height:0; }
 
-  /* WAITING */
-  #waiting-display {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-  }
-  #waiting-display h2 { font-size: 36px; color: #4a90e2; letter-spacing: 4px; text-transform: uppercase; }
-  #waiting-display p { color: #666; font-size: 18px; }
-  .scan-url { font-size: 22px; color: #fff; background: #111a2e; border: 2px solid #2a5fd8; border-radius: 12px; padding: 12px 28px; letter-spacing: 2px; }
+/* VOTE AREA */
+.vote-area {
+  flex:1; display:flex; flex-direction:column;
+  padding:20px 24px 12px 28px;
+  border-right:1px solid #0f2040;
+  overflow:hidden; min-width:0;
+}
+#question-display { display:none; flex-direction:column; flex:1; min-height:0; }
+.q-badge { display:inline-block; background:#1d4ed8; border-radius:4px; padding:4px 12px; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; }
+.q-text { font-size:26px; font-weight:900; line-height:1.3; color:#f1f5f9; margin-bottom:20px; }
+.bars { display:flex; flex-direction:column; gap:11px; flex:1; justify-content:center; min-height:0; overflow:hidden; }
+.bar-row { display:flex; align-items:center; gap:12px; }
+.bar-letter { width:38px; height:38px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:17px; flex-shrink:0; }
+.la{background:#dc2626;} .lb{background:#16a34a;} .lc{background:#d97706;} .ld{background:#1d4ed8;}
+.bar-label { width:220px; font-size:15px; font-weight:500; flex-shrink:0; line-height:1.2; color:#cbd5e1; }
+.bar-track { flex:1; background:#0f1e3d; border-radius:5px; height:38px; overflow:hidden; border:1px solid #1a3060; }
+.bar-fill { height:100%; border-radius:5px; transition:width .7s cubic-bezier(.4,0,.2,1); display:flex; align-items:center; padding-left:10px; font-weight:700; font-size:14px; color:rgba(255,255,255,.9); }
+.fa{background:linear-gradient(90deg,#dc2626,#ef4444);}
+.fb{background:linear-gradient(90deg,#16a34a,#22c55e);}
+.fc{background:linear-gradient(90deg,#d97706,#f59e0b);}
+.fd{background:linear-gradient(90deg,#1d4ed8,#3b82f6);}
+.bar-count { width:44px; text-align:right; font-size:20px; font-weight:700; flex-shrink:0; }
+.bar-pct { width:48px; text-align:right; font-size:15px; color:#64748b; flex-shrink:0; }
 
-  /* QUESTION */
-  #question-display { display: none; flex: 1; flex-direction: column; }
-  .q-header {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-  .q-badge {
-    background: #2a5fd8;
-    border-radius: 8px;
-    padding: 6px 16px;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-  .q-text-display {
-    font-size: 34px;
-    font-weight: 900;
-    line-height: 1.3;
-    flex: 1;
-  }
+/* SENTIMENT PANEL */
+.sentiment-panel {
+  width:340px; flex-shrink:0;
+  display:flex; flex-direction:column;
+  padding:20px 20px 12px 20px;
+  height:100%;
+  overflow:hidden;
+}
+.main.fs .vote-area { display:none; }
+.main.fs .sentiment-panel { width:100%; padding:20px 60px 12px 60px; }
 
-  /* BARS */
-  .bars { display: flex; flex-direction: column; gap: 14px; flex: 1; justify-content: center; }
-  .bar-row { display: flex; align-items: center; gap: 16px; }
-  .bar-letter {
-    width: 44px; height: 44px;
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 20px;
-    flex-shrink: 0;
-  }
-  .bar-label { width: 260px; font-size: 17px; font-weight: 500; flex-shrink: 0; line-height: 1.2; }
-  .bar-track { flex: 1; background: #111a2e; border-radius: 6px; height: 42px; overflow: hidden; position: relative; }
-  .bar-fill {
-    height: 100%;
-    border-radius: 6px;
-    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    padding-left: 12px;
-  }
-  .bar-fill.fill-a { background: linear-gradient(90deg, #c8372d, #e05a50); }
-  .bar-fill.fill-b { background: linear-gradient(90deg, #2d8a4e, #4aad6e); }
-  .bar-fill.fill-c { background: linear-gradient(90deg, #c88a2d, #e0aa4a); }
-  .bar-fill.fill-d { background: linear-gradient(90deg, #2d6ac8, #4a90e2); }
-  .letter-a { background: #c8372d; }
-  .letter-b { background: #2d8a4e; }
-  .letter-c { background: #c88a2d; }
-  .letter-d { background: #2d6ac8; }
-  .bar-count { width: 60px; text-align: right; font-size: 22px; font-weight: 700; color: #fff; flex-shrink: 0; }
-  .bar-pct { width: 56px; text-align: right; font-size: 18px; color: #aaa; flex-shrink: 0; }
+.panel-title { font-size:11px; color:#3b82f6; letter-spacing:3px; text-transform:uppercase; font-weight:700; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid #0f2040; flex-shrink:0; }
+.mood-now { background:#071428; border:1px solid #1a3060; border-radius:12px; padding:14px 16px; margin-bottom:10px; flex-shrink:0; }
+.mood-now-label { font-size:11px; color:#64748b; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px; }
+.mood-big { display:flex; align-items:center; gap:12px; }
+.mood-emoji { font-size:40px; }
+.mood-score { font-size:32px; font-weight:900; color:#f1f5f9; line-height:1; }
+.mood-sub { font-size:12px; color:#64748b; margin-top:3px; }
+.mood-bar-track { width:100%; height:8px; background:#0f1e3d; border-radius:4px; overflow:hidden; margin-top:10px; }
+.mood-bar-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,#3b82f6 0%,#22c55e 50%,#f59e0b 80%,#ef4444 100%); transition:width .8s ease; width:50%; }
+.mood-bar-labels { display:flex; justify-content:space-between; font-size:10px; color:#475569; margin-top:4px; }
+.sent-count { font-size:12px; color:#64748b; text-align:right; margin-bottom:10px; flex-shrink:0; }
+.chart-wrap { background:#071428; border:1px solid #1a3060; border-radius:12px; padding:12px 14px; flex:1; display:flex; flex-direction:column; min-height:200px; }
+.chart-title { font-size:11px; color:#64748b; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; flex-shrink:0; }
+#sentimentChart { display:block; flex:1; width:100% !important; min-height:160px; }
 
-  /* TICKER / SENTIMENT BAR */
-  .ticker-bar {
-    height: 48px;
-    background: #0a1428;
-    border-top: 2px solid #1a3a6e;
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-    padding: 0 20px;
-    gap: 20px;
-    margin-top: 16px;
-  }
-  .ticker-label { font-size: 12px; color: #4a90e2; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; flex-shrink: 0; }
-  .sentiment-track {
-    flex: 1;
-    height: 12px;
-    background: #111a2e;
-    border-radius: 6px;
-    position: relative;
-    overflow: visible;
-  }
-  .sentiment-fill {
-    height: 100%;
-    border-radius: 6px;
-    background: linear-gradient(90deg, #4a90e2, #f0c040, #ff6644);
-    transition: width 0.8s ease;
-  }
-  .sentiment-marker {
-    position: absolute;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 24px;
-    transition: left 0.8s ease;
-    filter: drop-shadow(0 0 6px rgba(255,255,255,0.5));
-  }
-  .sentiment-emojis {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    position: absolute;
-    top: 20px;
-    font-size: 11px;
-    color: #555;
-  }
-  .sentiment-wrapper { flex: 1; position: relative; padding-bottom: 20px; }
-  .sentiment-avg { font-size: 14px; color: #f0c040; font-weight: 700; flex-shrink: 0; }
-  .ticker-voters { font-size: 13px; color: #666; flex-shrink: 0; }
+/* TICKER */
+.ticker-bar {
+  height:56px; background:#04080f;
+  border-top:3px solid #1d4ed8;
+  display:flex; align-items:stretch;
+  flex-shrink:0; overflow:hidden;
+}
+.ticker-logo {
+  flex-shrink:0; background:#071428; border-right:2px solid #1d4ed8;
+  display:flex; align-items:center; padding:0 18px; gap:6px;
+}
+.tl-main { font-size:13px; font-weight:900; color:#fff; letter-spacing:1px; text-transform:uppercase; }
+.tl-badge { background:#dc2626; color:#fff; font-size:13px; font-weight:900; padding:3px 8px; border-radius:3px; }
+.ticker-time {
+  flex-shrink:0; background:#04080f; border-right:2px solid #1d4ed8;
+  display:flex; align-items:center; padding:0 18px;
+  font-size:26px; font-weight:900; color:#f1f5f9;
+  letter-spacing:3px; font-variant-numeric:tabular-nums; min-width:105px;
+}
+.ticker-tag {
+  flex-shrink:0; background:#eab308;
+  display:flex; align-items:center; padding:0 16px;
+  font-size:13px; font-weight:900; color:#000;
+  letter-spacing:2px; text-transform:uppercase;
+}
+.ticker-scroll-wrap {
+  flex:1; overflow:hidden; position:relative;
+  background:#04080f;
+}
+#ticker-text {
+  position:absolute; top:50%; transform:translateY(-50%);
+  white-space:nowrap; font-size:19px; font-weight:500; color:#e2e8f0;
+  will-change:transform;
+}
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div class="topbar-logo">Townhall <span>Strategy</span></div>
-  <div class="topbar-live"><div class="live-dot"></div>LIVE</div>
-  <div class="topbar-count">Votanti: <strong id="voter-count">0</strong></div>
+  <div class="topbar-left">
+    <div class="topbar-logo">Townhall <span>Strategy &amp; Transformation</span></div>
+    <div class="topbar-divider"></div>
+    <div class="topbar-sub">Live Voting</div>
+  </div>
+  <div class="topbar-right">
+    <div class="voter-pill">Votanti: <strong id="voter-count">0</strong></div>
+    <div class="live-pill"><div class="live-dot"></div><div class="live-text">LIVE</div></div>
+  </div>
 </div>
 
-<div class="main">
-  <div id="waiting-display">
-    <h2>In attesa...</h2>
-    <p>Il conduttore attiverà la prossima domanda</p>
-    <div class="scan-url">townhall.fastweb.it</div>
+<div class="main" id="main">
+
+  <div class="vote-area">
+    <div id="question-display">
+      <div class="q-badge" id="q-num">Domanda 1</div>
+      <div class="q-text" id="q-text"></div>
+      <div class="bars" id="bars"></div>
+    </div>
   </div>
 
-  <div id="question-display">
-    <div class="q-header">
-      <div class="q-badge" id="disp-q-number">Domanda 1</div>
-      <div class="q-text-display" id="disp-q-text"></div>
+  <div class="sentiment-panel">
+    <div class="panel-title">Mood Plenaria</div>
+    <div class="mood-now">
+      <div class="mood-now-label">Adesso</div>
+      <div class="mood-big">
+        <div class="mood-emoji" id="mood-emoji">😐</div>
+        <div>
+          <div class="mood-score" id="mood-score">—</div>
+          <div class="mood-sub" id="mood-label">In attesa...</div>
+        </div>
+      </div>
+      <div class="mood-bar-track"><div class="mood-bar-fill" id="mood-fill"></div></div>
+      <div class="mood-bar-labels"><span>😴</span><span>😐</span><span>🙂</span><span>😄</span><span>🔥</span></div>
     </div>
-    <div class="bars" id="disp-bars"></div>
+    <div class="sent-count" id="sent-count">0 risposte</div>
+    <div class="chart-wrap">
+      <div class="chart-title">Andamento ultimi 30 min</div>
+      <canvas id="sentimentChart"></canvas>
+    </div>
   </div>
+
 </div>
 
 <div class="ticker-bar">
-  <div class="ticker-label">Mood sala</div>
-  <div class="sentiment-wrapper">
-    <div class="sentiment-track">
-      <div class="sentiment-fill" id="sent-fill" style="width:50%"></div>
-      <div class="sentiment-marker" id="sent-marker" style="left:50%">😐</div>
-    </div>
-    <div class="sentiment-emojis">
-      <span>😴</span><span>😐</span><span>🙂</span><span>😄</span><span>🔥</span>
-    </div>
+  <div class="ticker-logo">
+    <span class="tl-main">Townhall</span>
+    <span class="tl-badge">LIVE</span>
   </div>
-  <div class="sentiment-avg" id="sent-avg">-</div>
-  <div class="ticker-voters" id="sent-voters">0 risposte</div>
+  <div class="ticker-time" id="clock">--:--</div>
+  <div class="ticker-tag" id="ticker-tag">LIVE</div>
+  <div class="ticker-scroll-wrap">
+    <span id="ticker-text">Vota su marcoraimondi.github.io/pages/townhall &nbsp;&#9679;&nbsp; Il tuo voto è anonimo &nbsp;&#9679;&nbsp; Townhall Strategy &amp; Transformation 2026</span>
+  </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Espone la config Firebase globalmente per il modulo
+window._fbConfig = {
+  apiKey: "AIzaSyAKUJyfsvSvYm-Alvv8xjF39mf9fH_GR40",
+  authDomain: "townhallstrategy.firebaseapp.com",
+  databaseURL: "https://townhallstrategy-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "townhallstrategy",
+  storageBucket: "townhallstrategy.firebasestorage.app",
+  messagingSenderId: "922581580105",
+  appId: "1:922581580105:web:56a85984338c470fb88298"
+};
+</script>
 <script type="module">
-import { db } from './firebase.js';
-import { ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+async function waitForChart(ms=5000) {
+  const t0 = Date.now();
+  while (typeof Chart === 'undefined' && Date.now()-t0 < ms)
+    await new Promise(r => setTimeout(r, 50));
+  if (typeof Chart === 'undefined') throw new Error('Chart.js non caricato');
+}
+
+// Avvia tutto dentro un async IIFE — evita top-level await
+(async () => {
+
+// Firebase init inline — no module dependency issues
+const app = initializeApp(window._fbConfig);
+const db = getDatabase(app);
+
+// Wait for Chart.js before setting up chart
+await waitForChart();
+
+// Espone debug globale
+window._dbg = { allPts: null, lastAvg: null, lastRecord: null, fbConnected: false };
 
 const EMOJIS = ['😴','😐','🙂','😄','🔥'];
+const LABELS = ['Assonnata','Neutra','Positiva','Entusiasta','On fire!'];
 const LETTERS = ['A','B','C','D'];
-const FILLS = ['fill-a','fill-b','fill-c','fill-d'];
-const LCLASSES = ['letter-a','letter-b','letter-c','letter-d'];
+const LFILL = ['fa','fb','fc','fd'];
+const LLETTER = ['la','lb','lc','ld'];
 
-let currentQid = null;
+/* ═══════════════════════════════════════
+   CLOCK
+═══════════════════════════════════════ */
+function updateClock() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+}
+updateClock();
+setInterval(updateClock, 15000);
 
-// Active question
-onValue(ref(db,'active_question'), snap => {
-  const qid = snap.val();
-  if (!qid) {
-    document.getElementById('waiting-display').style.display = 'flex';
-    document.getElementById('question-display').style.display = 'none';
-    currentQid = null;
-    return;
+/* ═══════════════════════════════════════
+   TICKER — pure JS RAF scroll
+═══════════════════════════════════════ */
+const tickerEl = document.getElementById('ticker-text');
+const tickerWrap = document.querySelector('.ticker-scroll-wrap');
+let txPos = 0;
+let txSpeed = 90; // px/s
+let txWidth = 0;
+let wWidth = 0;
+let lastTs = null;
+
+function measureTicker() {
+  txWidth = tickerEl.getBoundingClientRect().width;
+  wWidth  = tickerWrap.getBoundingClientRect().width;
+}
+
+function tickerStep(ts) {
+  if (!lastTs) lastTs = ts;
+  const dt = Math.min((ts - lastTs) / 1000, 0.1);
+  lastTs = ts;
+  txPos -= txSpeed * dt;
+  if (txPos < -(txWidth + 20)) txPos = wWidth + 20;
+  tickerEl.style.left = txPos + 'px';
+  requestAnimationFrame(tickerStep);
+}
+
+// Start after layout
+requestAnimationFrame(() => {
+  measureTicker();
+  txPos = wWidth + 20;
+  requestAnimationFrame(tickerStep);
+});
+
+// Firebase ticker updates
+onValue(ref(db,'ticker'), snap => {
+  const t = snap.val();
+  if (!t) return;
+  if (t.tag)  document.getElementById('ticker-tag').textContent = t.tag;
+  if (t.text) {
+    tickerEl.textContent = t.text;
+    // re-measure after DOM update
+    requestAnimationFrame(() => {
+      measureTicker();
+      txPos = wWidth + 20; // restart from right
+    });
   }
-  if (qid !== currentQid) {
-    currentQid = qid;
-    loadQuestion(qid);
+  if (t.speed) txSpeed = Number(t.speed);
+});
+
+/* ═══════════════════════════════════════
+   CHART
+═══════════════════════════════════════ */
+const WINDOW_MS = 30 * 60 * 1000;
+const ctx = document.getElementById('sentimentChart').getContext('2d');
+const chartData = { labels: [], datasets: [{ data: [],
+  borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.15)',
+  borderWidth:2, pointRadius:3, pointBackgroundColor:'#3b82f6',
+  tension:.4, fill:true }]};
+const chart = new Chart(ctx, {
+  type:'line', data:chartData,
+  options:{
+    responsive:true, maintainAspectRatio:false, animation:{duration:400},
+    plugins:{legend:{display:false}, tooltip:{callbacks:{label: c =>
+      EMOJIS[Math.min(4,Math.max(0,Math.round(c.raw)-1))] + ' ' + c.raw.toFixed(1)
+    }}},
+    scales:{
+      y:{ min:1, max:5, ticks:{stepSize:1,color:'#475569', callback: v => EMOJIS[v-1]||v },
+          grid:{color:'#0f1e3d'}, border:{color:'#1a3060'} },
+      x:{ ticks:{color:'#475569', maxTicksLimit:8},
+          grid:{color:'#0f1e3d'}, border:{color:'#1a3060'} }
+    }
   }
 });
 
+let allPts = [];
+
+function redrawChart() {
+  const cutoff = Date.now() - WINDOW_MS;
+  const vis = allPts.filter(p => p.ts >= cutoff);
+  chartData.labels = vis.map(p => p.label);
+  chartData.datasets[0].data = vis.map(p => p.value);
+  chart.update('none');
+}
+
+// Slide the 30-min window every 60s to drop old points
+setInterval(redrawChart, 60000);
+
+/* ═══════════════════════════════════════
+   SENTIMENT LIVE + RECORDING
+═══════════════════════════════════════ */
+let lastAvg = null;
+let lastRecord = 0;
+
+function record(avg) {
+  lastRecord = Date.now();
+  window._dbg.lastRecord = lastRecord;
+  const d = new Date();
+  const label = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  allPts.push({ label, value: parseFloat(avg.toFixed(2)), ts: lastRecord });
+  window._dbg.allPts = allPts.length;
+  if (allPts.length > 240) allPts = allPts.slice(-240);
+  redrawChart();
+}
+
+// Tick every 5s: record a point if 30s have passed
+setInterval(() => {
+  if (lastAvg !== null && Date.now() - lastRecord >= 30000) record(lastAvg);
+}, 5000);
+
+onValue(ref(db,'sentiment'), snap => {
+  window._dbg.fbConnected = true;
+  const data = snap.val() || {};
+  const vals = Object.values(data)
+    .map(d => typeof d === 'object' ? d.value : d)
+    .filter(v => typeof v === 'number' && v >= 1 && v <= 5);
+
+  if (!vals.length) {
+    lastAvg = null;
+    window._dbg.lastAvg = null;
+    document.getElementById('mood-emoji').textContent = '😐';
+    document.getElementById('mood-score').textContent = '—';
+    document.getElementById('mood-label').textContent = 'In attesa...';
+    document.getElementById('mood-fill').style.width = '50%';
+    document.getElementById('sent-count').textContent = '0 risposte';
+    return;
+  }
+
+  const avg = vals.reduce((a,b)=>a+b,0) / vals.length;
+  lastAvg = avg;
+  window._dbg.lastAvg = avg;
+
+  const idx = Math.min(4, Math.max(0, Math.round(avg) - 1));
+  document.getElementById('mood-emoji').textContent = EMOJIS[idx];
+  document.getElementById('mood-score').textContent = avg.toFixed(1) + ' / 5';
+  document.getElementById('mood-label').textContent = LABELS[idx];
+  document.getElementById('mood-fill').style.width = ((avg-1)/4*100) + '%';
+  document.getElementById('sent-count').textContent = vals.length + ' risposte';
+
+  if (Date.now() - lastRecord >= 30000) record(avg);
+});
+
+/* ═══════════════════════════════════════
+   ACTIVE QUESTION
+═══════════════════════════════════════ */
+let curQid = null;
+let votesUnsub = null;
+
+onValue(ref(db,'active_question'), snap => {
+  const qid = snap.val();
+  const mainEl = document.getElementById('main');
+
+  if (!qid) {
+    mainEl.classList.add('fs');
+    document.getElementById('question-display').style.display = 'none';
+    document.getElementById('voter-count').textContent = '0';
+    if (votesUnsub) { votesUnsub(); votesUnsub = null; }
+    curQid = null;
+    // Force Chart.js to resize after layout change
+    setTimeout(() => chart.resize(), 50);
+    return;
+  }
+
+  mainEl.classList.remove('fs');
+  if (qid === curQid) return;
+  // Force Chart.js resize back to narrower column
+  setTimeout(() => chart.resize(), 50);
+  curQid = qid;
+  loadQuestion(qid);
+});
+
 async function loadQuestion(qid) {
-  const qSnap = await get(ref(db,'questions/'+qid));
-  const q = qSnap.val();
+  const snap = await get(ref(db,'questions/'+qid));
+  const q = snap.val();
   if (!q) return;
-  document.getElementById('waiting-display').style.display = 'none';
-  const qd = document.getElementById('question-display');
-  qd.style.display = 'flex';
-  document.getElementById('disp-q-number').textContent = 'Domanda ' + (q.index||'');
-  document.getElementById('disp-q-text').textContent = q.text;
-  const barsEl = document.getElementById('disp-bars');
+
+  document.getElementById('question-display').style.display = 'flex';
+  document.getElementById('q-num').textContent = 'Domanda ' + (q.index || '');
+  document.getElementById('q-text').textContent = q.text;
+
+  const barsEl = document.getElementById('bars');
   barsEl.innerHTML = '';
   q.options.forEach((opt, i) => {
     const row = document.createElement('div');
     row.className = 'bar-row';
-    row.innerHTML = `
-      <div class="bar-letter ${LCLASSES[i]}">${LETTERS[i]}</div>
-      <div class="bar-label">${opt}</div>
-      <div class="bar-track"><div class="bar-fill ${FILLS[i]}" id="bar-${i}" style="width:0%"></div></div>
-      <div class="bar-count" id="cnt-${i}">0</div>
-      <div class="bar-pct" id="pct-${i}">0%</div>`;
+    row.innerHTML =
+      `<div class="bar-letter ${LLETTER[i]}">${LETTERS[i]}</div>` +
+      `<div class="bar-label">${opt}</div>` +
+      `<div class="bar-track"><div class="bar-fill ${LFILL[i]}" id="b${i}" style="width:0%"></div></div>` +
+      `<div class="bar-count" id="c${i}">0</div>` +
+      `<div class="bar-pct" id="p${i}">0%</div>`;
     barsEl.appendChild(row);
   });
-  // Listen to votes
-  onValue(ref(db,'votes/'+qid), snap => {
+
+  if (votesUnsub) { votesUnsub(); votesUnsub = null; }
+  votesUnsub = onValue(ref(db,'votes/'+qid), snap => {
     const votes = snap.val() || {};
     const counts = new Array(q.options.length).fill(0);
-    Object.values(votes).forEach(v => { if (v < counts.length) counts[v]++; });
+    Object.values(votes).forEach(v => { if (typeof v === 'number' && v < counts.length) counts[v]++; });
     const total = counts.reduce((a,b)=>a+b,0);
     document.getElementById('voter-count').textContent = total;
     counts.forEach((c,i) => {
       const pct = total ? Math.round(c/total*100) : 0;
-      document.getElementById('bar-'+i).style.width = pct+'%';
-      document.getElementById('cnt-'+i).textContent = c;
-      document.getElementById('pct-'+i).textContent = pct+'%';
+      const b = document.getElementById('b'+i); if(b) b.style.width = pct+'%';
+      const cv = document.getElementById('c'+i); if(cv) cv.textContent = c;
+      const p = document.getElementById('p'+i); if(p) p.textContent = pct+'%';
     });
   });
 }
 
-// Sentiment
-onValue(ref(db,'sentiment'), snap => {
-  const data = snap.val() || {};
-  const vals = Object.values(data).map(d => d.value || d).filter(v => v>=1&&v<=5);
-  if (!vals.length) return;
-  const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
-  const pct = ((avg-1)/4)*100;
-  const emoji = EMOJIS[Math.round(avg)-1] || '😐';
-  document.getElementById('sent-fill').style.width = pct+'%';
-  document.getElementById('sent-marker').style.left = pct+'%';
-  document.getElementById('sent-marker').textContent = emoji;
-  document.getElementById('sent-avg').textContent = avg.toFixed(1) + ' / 5';
-  document.getElementById('sent-voters').textContent = vals.length + ' risposte';
-});
+})(); // chiude l'async IIFE
 </script>
 </body>
 </html>
