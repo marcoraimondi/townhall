@@ -98,52 +98,6 @@
  <span id="connection-status">Connessione a Firebase...</span>
 </div>
 
-<!-- CREATE QUESTION -->
-<div class="panel">
- <h2>➕ Nuova Domanda</h2>
- <label>Testo domanda</label>
- <textarea id="q-text" rows="3" placeholder="Es: Qual è il nostro obiettivo principale?"></textarea>
- 
- <label>Opzioni</label>
- <div class="opt-row"><span class="letter letter-A">A</span><input type="text" id="opt-a" placeholder="Opzione A"></div>
- <div class="opt-row"><span class="letter letter-B">B</span><input type="text" id="opt-b" placeholder="Opzione B"></div>
- <div class="opt-row"><span class="letter letter-C">C</span><input type="text" id="opt-c" placeholder="Opzione C"></div>
- <div class="opt-row"><span class="letter letter-D">D</span><input type="text" id="opt-d" placeholder="Opzione D"></div>
- 
- <label>Tempo (secondi)</label>
- <div class="timer-row">
-  <input type="number" id="q-timer" value="40" min="5" max="300" step="5">
-  <span style="color:#888;font-size:13px;">(opzionale, lascia 0 per nessun timer)</span>
- </div>
- 
- <div class="btn-row" style="margin-top:16px;">
-  <button id="btn-add-q" class="success">Aggiungi Domanda</button>
-  <button id="btn-clear-form" class="secondary">Pulisci</button>
- </div>
-</div>
-
-<!-- QUESTION LIST -->
-<div class="panel">
- <h2>📋 Tutte le Domande</h2>
- <div class="question-list" id="question-list">
-  <div class="empty-state">Caricamento...</div>
- </div>
-</div>
-
-<!-- ACTIVE QUESTION -->
-<div class="panel">
- <h2>▶️ Domanda Attiva</h2>
- <div id="active-q-container" style="display:none;">
-  <p id="active-q-text" style="font-size:15px;margin-bottom:12px;color:#f1f5f9;"></p>
-  <div id="active-q-options" style="font-size:13px;color:#888;margin-bottom:16px;"></div>
-  <div class="btn-row">
-   <button id="btn-stop-q" class="danger">Ferma Domanda</button>
-   <button id="btn-reset-votes" class="secondary">Azzera Voti</button>
-  </div>
- </div>
- <p id="no-active-q" style="color:#666;font-size:14px;">Nessuna domanda attiva</p>
-</div>
-
 <!-- IMAGE GALLERY -->
 <div class="panel">
  <h2>🖼️ Galleria Immagini</h2>
@@ -167,11 +121,52 @@
  <div class="image-list" id="image-list"></div>
 </div>
 
+<!-- QUESTION LIST -->
+<div class="panel">
+ <h2>📊 Polls</h2>
+ <div class="question-list" id="question-list">
+  <div class="empty-state">Caricamento...</div>
+ </div>
+</div>
+
 <!-- DOMANDE DAL PUBBLICO -->
 <div class="panel">
  <h2>❓ Domande dal Pubblico</h2>
  <div style="color:#888;font-size:13px;margin-bottom:14px;">Le domande inviate dagli utenti. Clicca Mostra per proiettarla sul display.</div>
  <div id="audience-q-list"><div style="color:#666;font-size:13px;">Nessuna domanda ricevuta</div></div>
+</div>
+
+<!-- ACTIVE QUESTION (nascosta, serve solo per logica JS) -->
+<div id="active-q-container" style="display:none;">
+  <p id="active-q-text"></p>
+  <div id="active-q-options"></div>
+  <button id="btn-stop-q" style="display:none;"></button>
+  <button id="btn-reset-votes" style="display:none;"></button>
+</div>
+<p id="no-active-q" style="display:none;"></p>
+
+<!-- CREATE QUESTION -->
+<div class="panel">
+ <h2>➕ Nuovo Poll</h2>
+ <label>Testo domanda</label>
+ <textarea id="q-text" rows="3" placeholder="Es: Qual è il nostro obiettivo principale?"></textarea>
+ 
+ <label>Opzioni</label>
+ <div class="opt-row"><span class="letter letter-A">A</span><input type="text" id="opt-a" placeholder="Opzione A"></div>
+ <div class="opt-row"><span class="letter letter-B">B</span><input type="text" id="opt-b" placeholder="Opzione B"></div>
+ <div class="opt-row"><span class="letter letter-C">C</span><input type="text" id="opt-c" placeholder="Opzione C"></div>
+ <div class="opt-row"><span class="letter letter-D">D</span><input type="text" id="opt-d" placeholder="Opzione D"></div>
+ 
+ <label>Tempo (secondi)</label>
+ <div class="timer-row">
+  <input type="number" id="q-timer" value="40" min="5" max="300" step="5">
+  <span style="color:#888;font-size:13px;">(opzionale, lascia 0 per nessun timer)</span>
+ </div>
+ 
+ <div class="btn-row" style="margin-top:16px;">
+  <button id="btn-add-q" class="success">Aggiungi Poll</button>
+  <button id="btn-clear-form" class="secondary">Pulisci</button>
+ </div>
 </div>
 
 <!-- RESET ALL -->
