@@ -216,10 +216,8 @@ html, body {
 <div class="main" id="main">
 
   <!-- IMAGE SECTION (when no question) -->
-  <div class="vote-area" id="image-area" style="display:none;">
-    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
-      <img id="display-image" src="" alt="Slide" style="max-width:100%;max-height:75vh;object-fit:contain;border-radius:12px;">
-    </div>
+  <div class="vote-area" id="image-area" style="display:none; align-items:center; justify-content:center;">
+    <img id="display-image" src="" alt="Slide" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:12px;">
   </div>
 
   <!-- QUESTION SECTION -->
@@ -505,7 +503,7 @@ onValue(ref(db,'active_question'), snap => {
           if (imageList[activeImgIdx]) {
             console.log('[DISPLAY_ACTIVE_IMAGE] Showing:', imageList[activeImgIdx].name);
             document.getElementById('question-area').style.display = 'none';
-            document.getElementById('image-area').style.display = 'block';
+            document.getElementById('image-area').style.display = 'flex';
             document.getElementById('display-image').src = imageList[activeImgIdx].dataUrl;
           } else {
             console.log('[DISPLAY_ACTIVE_IMAGE] No image at index', activeImgIdx);
