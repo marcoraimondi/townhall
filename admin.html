@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin – Townhall Strategy &amp; Transformation</title>
+<title>Admin – Townhall Strategy & Transformation</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0a1a; color: #fff; padding: 24px; max-width: 700px; margin: 0 auto; }
@@ -42,14 +42,19 @@
   .q-item-sub { font-size: 12px; color: #64748b; margin-top: 3px; }
   .active-q { border-color: #3b82f6; }
   .active-badge { background: #dc2626; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; letter-spacing: 1px; flex-shrink: 0; }
+  .timer-badge { background: #1e3a6e; color: #60a5fa; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; letter-spacing: 1px; flex-shrink: 0; margin-left: 6px; }
   .toast { position: fixed; bottom: 24px; right: 24px; background: #22c55e; color: #000; font-weight: 700; padding: 12px 20px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 999; }
   .toast.show { opacity: 1; }
+  
+  .duration-input-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .duration-input-row input { width: 80px; margin-bottom: 0; text-align: center; }
+  .duration-label { color: #888; font-size: 13px; }
 </style>
 </head>
 <body>
 
 <h1>Admin Panel</h1>
-<div class="subtitle">Townhall Strategy &amp; Transformation — Controllo conduttore</div>
+<div class="subtitle">Townhall Strategy & Transformation — Controllo conduttore</div>
 
 <div class="status-bar">
   <div class="status-dot"></div>
@@ -62,7 +67,7 @@
   <label>Etichetta badge (es. LIVE, BREAK, ULTIME ORE)</label>
   <input id="ticker-tag" placeholder="LIVE" maxlength="20">
   <label>Testo del ticker</label>
-  <textarea id="ticker-text-input" placeholder="Es: Benvenuti ● Vota su marcoraimondi.github.io/pages/townhall ● Grazie per la partecipazione" style="min-height:70px"></textarea>
+  <textarea id="ticker-text-input" placeholder="Es: Benvenuti ● Vota su marcoraimondi.github.io/townhall ● Grazie per la partecipazione" style="min-height:70px"></textarea>
   <button class="btn btn-primary btn-sm" id="btn-save-ticker">✔ Aggiorna ticker</button>
 </div>
 
@@ -80,6 +85,13 @@
   <h2>➕ Aggiungi domanda</h2>
   <label>Testo della domanda</label>
   <textarea id="new-q-text" placeholder="Es: Quale sarà il prodotto con più crescita nel 2026?"></textarea>
+  
+  <label>Durata timer (secondi)</label>
+  <div class="duration-input-row">
+    <input id="new-q-duration" type="number" value="40" min="5" max="300" step="5">
+    <span class="duration-label">secondi (default: 40)</span>
+  </div>
+  
   <label>Opzione A</label>
   <div class="opt-row"><div class="lbl lbl-a">A</div><input id="opt-a" placeholder="Opzione A"></div>
   <label>Opzione B</label>
@@ -124,6 +136,7 @@ const db = getDatabase(app);
 
 let questions = {};
 let activeQid = null;
+let activeQuestionData = null;
 
 // ── Toast helper ──
 function toast(msg, color) {
@@ -136,10 +149,16 @@ function toast(msg, color) {
 
 // ── Firebase listeners ──
 onValue(ref(db,'active_question'), snap => {
-  activeQid = snap.val();
-  const label = activeQid && questions[activeQid]
-    ? questions[activeQid].text.substring(0,30) + '…'
-    : 'nessuna';
+  activeQuestionData = snap.val();
+  activeQid = activeQuestionData ? (activeQuestionData.qid || activeQuestionData) : null;
+  
+  let label = 'nessuna';
+  if (activeQid && questions[activeQid]) {
+    label = questions[activeQid].text.substring(0, 30) + '…';
+    if (activeQuestionData.durationSeconds) {
+      label += ` (${activeQuestionData.durationSeconds}s)`;
+    }
+  }
   document.getElementById('status-active').textContent = label;
   renderList();
 });
@@ -179,16 +198,39 @@ function renderList() {
     const div = document.createElement('div');
     div.className = 'q-item' + (isActive ? ' active-q' : '');
 
-    // Activate button
+    const textDiv = document.createElement('div');
+    textDiv.className = 'q-item-text';
+    textDiv.innerHTML = `<div>${idx+1}. ${q.text}</div><div class="q-item-sub">${q.options.join(' / ')}</div>`;
+
+    div.appendChild(textDiv);
+    
+    if (isActive) {
+      const badge = document.createElement('span');
+      badge.className = 'active-badge';
+      badge.textContent = 'LIVE';
+      div.appendChild(badge);
+      
+      if (activeQuestionData && activeQuestionData.durationSeconds) {
+        const timerBadge = document.createElement('span');
+        timerBadge.className = 'timer-badge';
+        timerBadge.textContent = activeQuestionData.durationSeconds + 's';
+        div.appendChild(timerBadge);
+      }
+    }
+
     const btnActivate = document.createElement('button');
     btnActivate.className = 'btn btn-green btn-sm';
     btnActivate.textContent = '▶ Attiva';
     btnActivate.addEventListener('click', async () => {
-      await set(ref(db,'active_question'), qid);
+      const duration = q.durationSeconds || 40;
+      await set(ref(db,'active_question'), { 
+        qid: qid, 
+        startsAt: Date.now(),
+        durationSeconds: duration 
+      });
       toast('Domanda attivata!');
     });
 
-    // Delete button
     const btnDelete = document.createElement('button');
     btnDelete.className = 'btn btn-gray btn-sm';
     btnDelete.textContent = '✕';
@@ -200,18 +242,6 @@ function renderList() {
       toast('Domanda eliminata', '#f59e0b');
     });
 
-    const textDiv = document.createElement('div');
-    textDiv.className = 'q-item-text';
-    textDiv.innerHTML = `<div>${idx+1}. ${q.text}</div><div class="q-item-sub">${q.options.join(' / ')}</div>`;
-
-    div.appendChild(textDiv);
-    if (isActive) {
-      const badge = document.createElement('span');
-      badge.className = 'active-badge';
-      badge.textContent = 'LIVE';
-      div.appendChild(badge);
-    }
-    // Reset votes button per domanda
     const btnResetQ = document.createElement('button');
     btnResetQ.className = 'btn btn-gray btn-sm';
     btnResetQ.textContent = '🗑 Voti';
@@ -232,6 +262,7 @@ function renderList() {
 // ── Button listeners ──
 document.getElementById('btn-add-q').addEventListener('click', async () => {
   const text = document.getElementById('new-q-text').value.trim();
+  const duration = parseInt(document.getElementById('new-q-duration').value) || 40;
   const opts = ['opt-a','opt-b','opt-c','opt-d']
     .map(id => document.getElementById(id).value.trim())
     .filter(Boolean);
@@ -240,8 +271,15 @@ document.getElementById('btn-add-q').addEventListener('click', async () => {
     return;
   }
   const newRef = push(ref(db,'questions'));
-  await set(newRef, { text, options: opts, index: Object.keys(questions).length + 1, created: Date.now() });
+  await set(newRef, { 
+    text, 
+    options: opts, 
+    index: Object.keys(questions).length + 1, 
+    created: Date.now(),
+    durationSeconds: duration 
+  });
   document.getElementById('new-q-text').value = '';
+  document.getElementById('new-q-duration').value = '40';
   ['opt-a','opt-b','opt-c','opt-d'].forEach(id => document.getElementById(id).value = '');
   toast('Domanda aggiunta!');
 });
@@ -276,9 +314,8 @@ document.getElementById('btn-save-ticker').addEventListener('click', async () =>
 });
 
 document.getElementById('btn-clear-sentiment').addEventListener('click', async () => {
-  if (!confirm('Azzerare TUTTI i dati sentiment e lo storico del grafico?\nQuesta operazione è irreversibile.')) return;
+  if (!confirm('Azzerare tutto lo storico sentiment?')) return;
   await remove(ref(db,'sentiment'));
-  await remove(ref(db,'sentiment_history'));
   toast('Sentiment azzerato', '#f59e0b');
 });
 </script>
