@@ -221,37 +221,64 @@ onValue(ref(db, '.info/connected'), (snap) => {
 });
 
 // Load all questions
+// ═══════════════════════════════════════
+// STATO GLOBALE ADMIN
+// ═══════════════════════════════════════
+// activeMode: null | 'question' | 'image' | 'audience_q'
+let _adminActiveMode = null;
+
+function updateAdminUI() {
+  // Aggiorna question list
+  renderQuestionList();
+  // Aggiorna image list
+  renderImageList();
+  // Aggiorna audience questions
+  renderAudienceQuestions();
+}
+
 onValue(ref(db, 'questions'), (snap) => {
  const data = snap.val() || {};
  allQuestions = Object.entries(data).map(([id, q]) => ({ id, ...q })).sort((a,b) => a.index - b.index);
  renderQuestionList();
 });
 
-// Listen for active question
-onValue(ref(db, 'active_question'), (snap) => {
- const data = snap.val();
- const container = document.getElementById('active-q-container');
- const noActive = document.getElementById('no-active-q');
- 
- if (data) {
-  activeQid = data.qid || data;
-  get(ref(db, 'questions/' + activeQid)).then((qSnap) => {
-   const q = qSnap.val();
-   if (q) {
-    document.getElementById('active-q-text').textContent = q.text;
-    document.getElementById('active-q-options').textContent = q.options.map((o,i) => String.fromCharCode(65+i) + ') ' + o).join('  •  ');
-    container.style.display = 'block';
-    noActive.style.display = 'none';
-    renderQuestionList(); // Update active highlight
-   }
-  });
- } else {
-  activeQid = null;
-  container.style.display = 'none';
-  noActive.style.display = 'block';
-  renderQuestionList();
- }
+// Stato globale active modes
+let _activeQuestionId = null;
+let _activeImageIdx = null;
+let _activeAudienceQId = null;
+
+// Listener unificato che tiene aggiornato lo stato globale
+onValue(ref(db, 'active_question'), snap => {
+  _activeQuestionId = snap.val() ? (snap.val().qid || snap.val()) : null;
+  const container = document.getElementById('active-q-container');
+  const noActive = document.getElementById('no-active-q');
+  if (_activeQuestionId) {
+    activeQid = _activeQuestionId;
+    get(ref(db, 'questions/' + activeQid)).then((qSnap) => {
+      const q = qSnap.val();
+      if (q) {
+        document.getElementById('active-q-text').textContent = q.text;
+        document.getElementById('active-q-options').textContent = q.options.map((o,i) => String.fromCharCode(65+i) + ') ' + o).join('  •  ');
+        container.style.display = 'block';
+        noActive.style.display = 'none';
+      }
+    });
+  } else {
+    activeQid = null;
+    container.style.display = 'none';
+    noActive.style.display = 'block';
+  }
+  updateAdminUI();
 });
+
+onValue(ref(db, 'active_image'), snap => {
+  _activeImageIdx = snap.val();
+  window.activeImageIndex = _activeImageIdx !== null ? _activeImageIdx : -1;
+  updateAdminUI();
+});
+
+// Listen for active question
+// (sostituisce il vecchio listener - ora gestito sopra)
 
 function renderQuestionList() {
  const list = document.getElementById('question-list');
@@ -262,6 +289,9 @@ function renderQuestionList() {
  
  list.innerHTML = allQuestions.map((q, idx) => {
   const isActive = q.id === activeQid;
+  // Disabilita Pubblica se c'è qualcosa di attivo (immagine o domanda pubblico)
+  const somethingElseActive = (_activeImageIdx !== null && _activeImageIdx !== undefined && !isActive) ||
+                              (_activeAudienceQId !== null && _activeAudienceQId !== undefined);
   return `
    <div class="question-item${isActive ? ' active' : ''}">
     <div class="q-header">
@@ -272,7 +302,7 @@ function renderQuestionList() {
     <div class="q-actions">
      ${isActive ? 
        `<button class="danger" onclick="stopQuestion()">Ferma</button>` : 
-       `<button class="success" onclick="publishQuestion('${q.id}')">Pubblica</button>`
+       `<button class="success" onclick="publishQuestion('${q.id}')" ${somethingElseActive ? 'disabled title="Prima ferma/nascondi l&apos;elemento attivo"' : ''}>Pubblica</button>`
      }
      <button class="secondary" onclick="resetVotes('${q.id}')">Azzera Voti</button>
      <button class="danger" onclick="deleteQuestion('${q.id}')">Elimina</button>
@@ -285,10 +315,13 @@ function renderQuestionList() {
 window.publishQuestion = async (qid) => {
  const q = allQuestions.find(q => q.id === qid);
  if (!q) return;
- 
- const timer = 40; // default timer
+ // Ferma tutto il resto
+ await set(ref(db, 'active_image'), null);
+ await remove(ref(db, 'active_audience_q'));
+ const timer = q.durationSeconds || 40;
  await set(ref(db, 'active_question'), {
   qid: qid,
+  index: q.index,
   startsAt: Date.now(),
   durationSeconds: timer
  });
@@ -383,6 +416,10 @@ function renderAudienceQuestions() {
     const dt = new Date(q.ts);
     const time = dt.toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' });
     const isLive = activeAudienceQ === id;
+    // Disabilita Mostra se c'è qualcosa di attivo che non sia questa domanda
+    const somethingElseActive = (_activeQuestionId !== null) ||
+                                (_activeImageIdx !== null && _activeImageIdx !== undefined) ||
+                                (activeAudienceQ !== null && activeAudienceQ !== id);
     return `<div class="aq-item ${isLive ? 'live' : ''}" id="aq-${id}">
       <div class="aq-meta">${time}${isLive ? ' &nbsp;🟢 LIVE' : ''}</div>
       <div class="aq-text">${q.text}</div>
@@ -402,8 +439,9 @@ onValue(ref(db, 'audience_questions'), snap => {
 });
 
 onValue(ref(db, 'active_audience_q'), snap => {
-  activeAudienceQ = snap.val();
-  renderAudienceQuestions();
+  _activeAudienceQId = snap.val();
+  activeAudienceQ = _activeAudienceQId;
+  updateAdminUI();
 });
 
 window.toggleAudienceQ = async function(id) {
@@ -412,6 +450,9 @@ window.toggleAudienceQ = async function(id) {
     await remove(ref(db, 'active_audience_q'));
     toast('Domanda nascosta', '#f59e0b');
   } else {
+    // Ferma tutto il resto
+    await set(ref(db, 'active_question'), null);
+    await set(ref(db, 'active_image'), null);
     await set(ref(db, 'active_audience_q'), id);
     toast('Domanda proiettata!', '#22c55e');
   }
@@ -462,6 +503,10 @@ function renderImageList() {
  list.innerHTML = '';
  window.imageList.forEach((img, idx) => {
   const isActive = idx === window.activeImageIndex;
+  // Disabilita Mostra se c'è qualcosa di attivo che non sia questa immagine
+  const somethingElseActive = (_activeQuestionId !== null) ||
+                              (_activeAudienceQId !== null) ||
+                              (window.activeImageIndex >= 0 && !isActive);
   const item = document.createElement('div');
   item.className = 'image-item' + (isActive ? ' active' : '');
   item.innerHTML = `
@@ -560,11 +605,11 @@ window.deleteImage = async (id) => {
 };
 
 window.showImage = async (idx) => {
- // Mostra immagine e sovrascrivi domanda attiva
- await set(ref(db, 'active_question'), null); // Ferma eventuale domanda
+ // Ferma tutto il resto prima di mostrare l'immagine
+ await set(ref(db, 'active_question'), null);
+ await remove(ref(db, 'active_audience_q'));
  await set(ref(db, 'active_image'), idx);
  window.activeImageIndex = idx;
- renderImageList();
  toast('Immagine proiettata', '#22c55e');
 };
 
