@@ -340,8 +340,7 @@
 <!-- Image Section -->
 <div id="image-section">
   <div class="image-container">
-    <video id="logo-video" src="https://marcoraimondi.github.io/townhall/logo.mp4" autoplay loop muted playsinline style="max-width:70%; max-height:49vh; object-fit:contain; border-radius:8px;"></video>
-    <img id="display-image" src="" alt="Slide" style="display:none;">
+    <img id="display-image" src="" alt="Slide">
   </div>
 </div>
 
@@ -554,23 +553,18 @@ function updateIndexState() {
     audienceQSection.style.display = 'block';
   } else if (_activeImageIdx !== null && _activeImageIdx !== undefined && _cachedImages && _cachedImages[_activeImageIdx]) {
     // Immagine attiva
-    document.getElementById('logo-video').style.display = 'none';
-    document.getElementById('display-image').style.display = 'block';
     document.getElementById('display-image').src = _cachedImages[_activeImageIdx].dataUrl;
     waiting.style.display = 'none';
     voteSection.style.display = 'none';
     imageSection.style.display = 'block';
     audienceQSection.style.display = 'none';
   } else {
-    // Nessuna domanda, nessuna immagine — mostra video logo
+    // Nessuna domanda, nessuna immagine — mostra logo
     waiting.style.display = 'none';
     voteSection.style.display = 'none';
     imageSection.style.display = 'block';
     audienceQSection.style.display = 'none';
-    document.getElementById('display-image').style.display = 'none';
-    const vid = document.getElementById('logo-video');
-    vid.style.display = 'block';
-    vid.play();
+    document.getElementById('display-image').src = 'https://marcoraimondi.github.io/townhall/logo.png';
   }
 }
 
