@@ -368,11 +368,11 @@ document.getElementById('btn-reset-votes').addEventListener('click', async () =>
 // DOMANDE DAL PUBBLICO
 // ═══════════════════════════════════════
 let activeAudienceQ = null;
+let allAudienceQuestions = {};
 
-onValue(ref(db, 'audience_questions'), snap => {
-  const data = snap.val() || {};
+function renderAudienceQuestions() {
   const list = document.getElementById('audience-q-list');
-  const entries = Object.entries(data).sort((a,b) => a[1].ts - b[1].ts);
+  const entries = Object.entries(allAudienceQuestions).sort((a,b) => a[1].ts - b[1].ts);
 
   if (!entries.length) {
     list.innerHTML = '<div style="color:#666;font-size:13px;">Nessuna domanda ricevuta</div>';
@@ -387,20 +387,27 @@ onValue(ref(db, 'audience_questions'), snap => {
       <div class="aq-meta">${time}${isLive ? ' &nbsp;🟢 LIVE' : ''}</div>
       <div class="aq-text">${q.text}</div>
       <div class="aq-actions">
-        <button class="${isLive ? 'warning' : 'success'}" onclick="toggleAudienceQ('${id}', ${isLive})">
+        <button class="${isLive ? 'warning' : 'success'}" onclick="toggleAudienceQ('${id}')">
           ${isLive ? 'Nascondi' : 'Mostra'}
         </button>
         <button class="danger" onclick="deleteAudienceQ('${id}')">Cancella</button>
       </div>
     </div>`;
   }).join('');
+}
+
+onValue(ref(db, 'audience_questions'), snap => {
+  allAudienceQuestions = snap.val() || {};
+  renderAudienceQuestions();
 });
 
 onValue(ref(db, 'active_audience_q'), snap => {
   activeAudienceQ = snap.val();
+  renderAudienceQuestions();
 });
 
-window.toggleAudienceQ = async function(id, isLive) {
+window.toggleAudienceQ = async function(id) {
+  const isLive = activeAudienceQ === id;
   if (isLive) {
     await remove(ref(db, 'active_audience_q'));
     toast('Domanda nascosta', '#f59e0b');
