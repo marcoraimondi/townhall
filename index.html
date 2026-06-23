@@ -468,9 +468,8 @@ function updateIndexState() {
   const imageSection = document.getElementById('image-section');
 
   if (_activeQuestionData) {
-    // Domanda attiva
-    imageSection.style.display = 'none';
-    // (il resto lo gestisce il listener sotto)
+    // Domanda attiva — non toccare, il listener domanda gestisce il display
+    return;
   } else if (_activeImageIdx !== null && _activeImageIdx !== undefined && _cachedImages && _cachedImages[_activeImageIdx]) {
     // Immagine attiva
     console.log('[INDEX] Showing image:', _cachedImages[_activeImageIdx].name);
@@ -490,14 +489,14 @@ function updateIndexState() {
 onValue(ref(db, 'active_image'), imgSnap => {
   _activeImageIdx = imgSnap.val();
   console.log('[ACTIVE_IMAGE_LISTENER] Index:', _activeImageIdx);
-  if (!_activeQuestionData) updateIndexState();
+  updateIndexState();
 });
 
 // Listener realtime per images
 onValue(ref(db, 'images'), imagesSnap => {
   const images = imagesSnap.val() || {};
   _cachedImages = Object.values(images).sort((a,b) => a.order - b.order);
-  if (!_activeQuestionData) updateIndexState();
+  updateIndexState();
 });
 
 // Listen for active question
