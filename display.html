@@ -443,8 +443,19 @@ function record(avg) {
   allPts.push({ label, value: parseFloat(avg.toFixed(2)), ts: lastRecord });
   window._dbg.allPts = allPts.length;
   if (allPts.length > 240) allPts = allPts.slice(-240);
+  // Salva trend su Firebase
+  set(ref(db, 'sentiment_trend'), allPts);
   redrawChart();
 }
+
+// Ascolta il reset del trend da Firebase
+onValue(ref(db, 'sentiment_trend'), snap => {
+  const data = snap.val();
+  if (!data) {
+    allPts = [];
+    redrawChart();
+  }
+});
 
 // Tick every 5s: record a point if 30s have passed
 setInterval(() => {
