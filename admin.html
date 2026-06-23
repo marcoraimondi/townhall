@@ -315,7 +315,15 @@ function renderQuestionList() {
 window.publishQuestion = async (qid) => {
  const q = allQuestions.find(q => q.id === qid);
  if (!q) return;
- // Ferma tutto il resto
+ // Aggiorna subito lo stato locale
+ _activeImageIdx = null;
+ window.activeImageIndex = -1;
+ _activeAudienceQId = null;
+ activeAudienceQ = null;
+ _activeQuestionId = qid;
+ activeQid = qid;
+ updateAdminUI();
+ // Poi sincronizza Firebase
  await set(ref(db, 'active_image'), null);
  await remove(ref(db, 'active_audience_q'));
  const timer = q.durationSeconds || 40;
@@ -329,6 +337,9 @@ window.publishQuestion = async (qid) => {
 };
 
 window.stopQuestion = async () => {
+ _activeQuestionId = null;
+ activeQid = null;
+ updateAdminUI();
  await set(ref(db, 'active_question'), null);
  toast('Domanda fermata', '#f59e0b');
 };
@@ -447,10 +458,21 @@ onValue(ref(db, 'active_audience_q'), snap => {
 window.toggleAudienceQ = async function(id) {
   const isLive = activeAudienceQ === id;
   if (isLive) {
+    _activeAudienceQId = null;
+    activeAudienceQ = null;
+    updateAdminUI();
     await remove(ref(db, 'active_audience_q'));
     toast('Domanda nascosta', '#f59e0b');
   } else {
-    // Ferma tutto il resto
+    // Aggiorna subito lo stato locale
+    _activeQuestionId = null;
+    activeQid = null;
+    _activeImageIdx = null;
+    window.activeImageIndex = -1;
+    _activeAudienceQId = id;
+    activeAudienceQ = id;
+    updateAdminUI();
+    // Poi sincronizza Firebase
     await set(ref(db, 'active_question'), null);
     await set(ref(db, 'active_image'), null);
     await set(ref(db, 'active_audience_q'), id);
@@ -605,18 +627,26 @@ window.deleteImage = async (id) => {
 };
 
 window.showImage = async (idx) => {
- // Ferma tutto il resto prima di mostrare l'immagine
+ // Aggiorna subito lo stato locale per un re-render coerente
+ _activeQuestionId = null;
+ _activeAudienceQId = null;
+ activeAudienceQ = null;
+ activeQid = null;
+ _activeImageIdx = idx;
+ window.activeImageIndex = idx;
+ updateAdminUI();
+ // Poi sincronizza Firebase
  await set(ref(db, 'active_question'), null);
  await remove(ref(db, 'active_audience_q'));
  await set(ref(db, 'active_image'), idx);
- window.activeImageIndex = idx;
  toast('Immagine proiettata', '#22c55e');
 };
 
 window.hideImage = async () => {
- await set(ref(db, 'active_image'), null);
+ _activeImageIdx = null;
  window.activeImageIndex = -1;
- renderImageList();
+ updateAdminUI();
+ await set(ref(db, 'active_image'), null);
  toast('Immagine nascosta', '#f59e0b');
 };
 
