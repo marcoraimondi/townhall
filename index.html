@@ -41,7 +41,7 @@
     animation: blink 1s infinite;
   }
   @keyframes blink {
-    0%, 100% { opacity: 1; }
+    0%,100% { opacity: 1; }
     50% { opacity: 0.3; }
   }
   .live-count {
@@ -297,7 +297,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, get, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, get, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAKUJyfsvSvYm-Alvv8xjF39mf9fH_GR40",
@@ -323,25 +323,62 @@ let connectedUsers = 0;
 // Generate unique session ID for presence tracking
 const sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
 
-// Presence tracking
+// Presence tracking - improved version
 const userPresenceRef = ref(db, 'connected_users/' + sessionId);
 const connectedRef = ref(db, '.info/connected');
 
+let isConnected = false;
+
 onValue(connectedRef, (snap) => {
-  if (snap.val() === true) {
-    // Connected
-    set(userPresenceRef, true);
+  const connected = snap.val();
+  console.log('Firebase connection status:', connected);
+  
+  if (connected === true && !isConnected) {
+    // We just connected
+    isConnected = true;
+    
+    // Set presence
     set(userPresenceRef, true).then(() => {
-      onDisconnect(userPresenceRef).remove();
+      console.log('Presence set successfully');
+      
+      // Setup onDisconnect AFTER presence is set
+      onDisconnect(userPresenceRef).remove().then(() => {
+        console.log('onDisconnect handler registered');
+      }).catch(err => {
+        console.error('Failed to register onDisconnect:', err);
+      });
+    }).catch(err => {
+      console.error('Failed to set presence:', err);
     });
+  } else if (connected === false) {
+    isConnected = false;
   }
 });
 
-// Count connected users
+// Count connected users - poll every 2 seconds for better reliability
+function updateConnectedCount() {
+  get(ref(db, 'connected_users')).then((snap) => {
+    const users = snap.val() || {};
+    connectedUsers = Object.keys(users).length;
+    document.getElementById('live-count').textContent = connectedUsers;
+    console.log('Connected users:', connectedUsers, users);
+  }).catch(err => {
+    console.error('Error counting users:', err);
+  });
+}
+
+// Initial count
+updateConnectedCount();
+
+// Update count every 2 seconds
+setInterval(updateConnectedCount, 2000);
+
+// Also listen for changes
 onValue(ref(db, 'connected_users'), (snap) => {
   const users = snap.val() || {};
   connectedUsers = Object.keys(users).length;
   document.getElementById('live-count').textContent = connectedUsers;
+  console.log('Live count updated:', connectedUsers);
 });
 
 // Listen for active question
