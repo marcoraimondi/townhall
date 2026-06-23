@@ -565,8 +565,9 @@ function updateDisplayState() {
     qDisplay.style.display = 'none';
     aqDisplay.style.display = 'none';
   } else {
-    // Nessuna domanda, nessuna immagine
-    imgArea.style.display = 'none';
+    // Nessuna domanda, nessuna immagine — mostra logo
+    document.getElementById('display-image').src = 'https://marcoraimondi.github.io/townhall/logo.jpg';
+    imgArea.style.display = 'flex';
     qArea.style.display = 'flex';
     qDisplay.style.display = 'none';
     aqDisplay.style.display = 'none';
