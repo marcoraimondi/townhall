@@ -251,6 +251,12 @@ html, body {
       <div class="q-text" id="q-text"></div>
       <div class="bars" id="bars"></div>
     </div>
+    
+    <!-- DOMANDA DAL PUBBLICO -->
+    <div id="audience-q-display" style="display:none; flex-direction:column; justify-content:center; align-items:center; flex:1; padding:20px; text-align:center;">
+      <div style="font-size:13px; letter-spacing:3px; text-transform:uppercase; color:#3b82f6; margin-bottom:20px; font-weight:700;">Dal Pubblico</div>
+      <div id="audience-q-text" style="font-size:36px; font-weight:700; color:#f1f5f9; line-height:1.4; max-width:800px;"></div>
+    </div>
   </div>
 
   <div class="sentiment-panel">
@@ -504,6 +510,18 @@ let timerInterval = null;
 // Realtime listener for active_image
 let activeImageIdx = null;
 let cachedImages = null;
+let activeAudienceQ = null;
+let audienceQuestions = {};
+
+onValue(ref(db,'active_audience_q'), snap => {
+  activeAudienceQ = snap.val();
+  updateDisplayState();
+});
+
+onValue(ref(db,'audience_questions'), snap => {
+  audienceQuestions = snap.val() || {};
+  updateDisplayState();
+});
 
 onValue(ref(db,'active_image'), imgSnap => {
   activeImageIdx = imgSnap.val();
@@ -523,23 +541,35 @@ let activeQuestion = null;
 function updateDisplayState() {
   const imgArea = document.getElementById('image-area');
   const qArea = document.getElementById('question-area');
+  const qDisplay = document.getElementById('question-display');
+  const aqDisplay = document.getElementById('audience-q-display');
   
   if (activeQuestion) {
-    // Domanda attiva: nascondi immagine, mostra domanda
+    // Domanda questionario attiva
     imgArea.style.display = 'none';
     qArea.style.display = 'flex';
+    aqDisplay.style.display = 'none';
+    // question-display gestito dal listener active_question
+  } else if (activeAudienceQ && audienceQuestions[activeAudienceQ]) {
+    // Domanda dal pubblico attiva
+    imgArea.style.display = 'none';
+    qArea.style.display = 'flex';
+    qDisplay.style.display = 'none';
+    document.getElementById('audience-q-text').textContent = audienceQuestions[activeAudienceQ].text;
+    aqDisplay.style.display = 'flex';
   } else if (activeImageIdx !== null && activeImageIdx !== undefined && cachedImages && cachedImages[activeImageIdx]) {
-    // Nessuna domanda, immagine attiva
-    console.log('[DISPLAY] Showing image:', cachedImages[activeImageIdx].name);
+    // Immagine attiva
     document.getElementById('display-image').src = cachedImages[activeImageIdx].dataUrl;
     imgArea.style.display = 'flex';
-    qArea.style.display = 'flex'; // lasciamo visibile per tenere il layout (sentiment a destra)
-    document.getElementById('question-display').style.display = 'none';
+    qArea.style.display = 'flex';
+    qDisplay.style.display = 'none';
+    aqDisplay.style.display = 'none';
   } else {
     // Nessuna domanda, nessuna immagine
     imgArea.style.display = 'none';
     qArea.style.display = 'flex';
-    document.getElementById('question-display').style.display = 'none';
+    qDisplay.style.display = 'none';
+    aqDisplay.style.display = 'none';
   }
 }
 
