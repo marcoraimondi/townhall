@@ -511,6 +511,9 @@ onValue(ref(db, 'active_question'), async (snap) => {
   const qid = data.qid || data;
   activeQuestion = { qid, ...data };
   
+  // Hide image, show question
+  document.getElementById('image-section').style.display = 'none';
+  
   const qSnap = await get(ref(db, 'questions/' + qid));
   const q = qSnap.val();
   if (!q) return;
