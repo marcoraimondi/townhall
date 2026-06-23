@@ -344,6 +344,12 @@
   </div>
 </div>
 
+<!-- Audience Question Section -->
+<div id="audience-q-section" style="display:none; width:100%; max-width:600px; text-align:center; padding:30px 20px;">
+  <div style="font-size:12px; letter-spacing:3px; text-transform:uppercase; color:#4a7fd4; margin-bottom:20px; font-weight:700;">Dal Pubblico</div>
+  <div id="audience-q-text" style="font-size:26px; font-weight:700; color:#f1f5f9; line-height:1.5;"></div>
+</div>
+
 <div id="vote-section">
   <div class="question-box">
     <div class="q-number" id="q-number">Domanda 1</div>
@@ -526,29 +532,52 @@ console.log('[INIT] Heartbeat + cleanup started');
 let _activeImageIdx = null;
 let _cachedImages = null;
 let _activeQuestionData = null;
+let _activeAudienceQ = null;
+let _audienceQuestions = {};
 
 function updateIndexState() {
   const waiting = document.getElementById('waiting');
   const voteSection = document.getElementById('vote-section');
   const imageSection = document.getElementById('image-section');
+  const audienceQSection = document.getElementById('audience-q-section');
 
   if (_activeQuestionData) {
-    // Domanda attiva — non toccare, il listener domanda gestisce il display
+    // Domanda questionario attiva — gestita dal suo listener
     return;
+  } else if (_activeAudienceQ && _audienceQuestions[_activeAudienceQ]) {
+    // Domanda dal pubblico attiva
+    document.getElementById('audience-q-text').textContent = _audienceQuestions[_activeAudienceQ].text;
+    waiting.style.display = 'none';
+    voteSection.style.display = 'none';
+    imageSection.style.display = 'none';
+    audienceQSection.style.display = 'block';
   } else if (_activeImageIdx !== null && _activeImageIdx !== undefined && _cachedImages && _cachedImages[_activeImageIdx]) {
     // Immagine attiva
-    console.log('[INDEX] Showing image:', _cachedImages[_activeImageIdx].name);
     document.getElementById('display-image').src = _cachedImages[_activeImageIdx].dataUrl;
     waiting.style.display = 'none';
     voteSection.style.display = 'none';
     imageSection.style.display = 'block';
+    audienceQSection.style.display = 'none';
   } else {
     // Nessuna domanda, nessuna immagine
     waiting.style.display = 'flex';
     voteSection.style.display = 'none';
     imageSection.style.display = 'none';
+    audienceQSection.style.display = 'none';
   }
 }
+
+// Listener active_audience_q
+onValue(ref(db, 'active_audience_q'), snap => {
+  _activeAudienceQ = snap.val();
+  updateIndexState();
+});
+
+// Listener audience_questions
+onValue(ref(db, 'audience_questions'), snap => {
+  _audienceQuestions = snap.val() || {};
+  updateIndexState();
+});
 
 // Listener realtime per active_image
 onValue(ref(db, 'active_image'), imgSnap => {
