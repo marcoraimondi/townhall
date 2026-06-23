@@ -359,7 +359,8 @@ document.getElementById('btn-reset-all-votes').addEventListener('click', async (
 document.getElementById('btn-clear-sentiment').addEventListener('click', async () => {
  if (!confirm('Azzerare tutto lo storico sentiment?')) return;
  await remove(ref(db, 'sentiment'));
- toast('Sentiment azzerato', '#f59e0b');
+ await remove(ref(db, 'sentiment_trend'));
+ toast('Sentiment e trend azzerati', '#f59e0b');
 });
 
 // Toast
