@@ -3,321 +3,374 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin – Townhall Strategy & Transformation</title>
+<title>Admin – Townhall S&T</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0a1a; color: #fff; padding: 24px; max-width: 700px; margin: 0 auto; }
-  h1 { font-size: 22px; margin-bottom: 4px; color: #4a90e2; }
-  .subtitle { font-size: 13px; color: #666; margin-bottom: 24px; }
-  .status-bar { display:flex; align-items:center; gap:10px; background:#111a2e; border:1px solid #1e3a6e; border-radius:10px; padding:10px 16px; margin-bottom:20px; font-size:13px; }
-  .status-dot { width:9px; height:9px; background:#22c55e; border-radius:50%; flex-shrink:0; animation: blink 1.5s infinite; }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-  .panel { background: #111a2e; border: 1px solid #1e3a6e; border-radius: 14px; padding: 20px; margin-bottom: 20px; }
-  .panel h2 { font-size: 15px; color: #4a90e2; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px; }
-  label { font-size: 13px; color: #aaa; display: block; margin-bottom: 6px; }
-  input, textarea {
-    width: 100%; background: #0a0a1a; border: 1px solid #2a3a5e;
-    border-radius: 8px; color: #fff; padding: 10px 12px; font-size: 14px;
-    margin-bottom: 14px; font-family: inherit;
-  }
-  textarea { resize: vertical; min-height: 60px; }
-  .opt-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
-  .opt-row input { margin-bottom: 0; flex: 1; }
-  .opt-row .lbl { width: 28px; height: 28px; border-radius: 6px; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; font-size:13px; }
-  .lbl-a{background:#c8372d;} .lbl-b{background:#2d8a4e;} .lbl-c{background:#c88a2d;} .lbl-d{background:#2d6ac8;}
-
-  .btn { border: none; border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity 0.15s; font-family: inherit; }
-  .btn:hover { opacity: 0.85; }
-  .btn-primary { background: #1d4ed8; color: #fff; }
-  .btn-green   { background: #15803d; color: #fff; }
-  .btn-red     { background: #b91c1c; color: #fff; }
-  .btn-orange  { background: #c2410c; color: #fff; }
-  .btn-gray    { background: #334155; color: #fff; }
-  .btn-sm { padding: 7px 14px; font-size: 13px; }
-  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
-
-  .q-item { background: #0a0a1a; border: 1px solid #1e3a6e; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
-  .q-item-text { flex: 1; font-size: 14px; min-width: 0; }
-  .q-item-text > div:first-child { color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .q-item-sub { font-size: 12px; color: #64748b; margin-top: 3px; }
-  .active-q { border-color: #3b82f6; }
-  .active-badge { background: #dc2626; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; letter-spacing: 1px; flex-shrink: 0; }
-  .timer-badge { background: #1e3a6e; color: #60a5fa; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; letter-spacing: 1px; flex-shrink: 0; margin-left: 6px; }
-  .toast { position: fixed; bottom: 24px; right: 24px; background: #22c55e; color: #000; font-weight: 700; padding: 12px 20px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 999; }
-  .toast.show { opacity: 1; }
-  
-  .duration-input-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-  .duration-input-row input { width: 80px; margin-bottom: 0; text-align: center; }
-  .duration-label { color: #888; font-size: 13px; }
+ * { box-sizing: border-box; margin: 0; padding: 0; }
+ body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0a1a; color: #fff; padding: 24px; max-width: 800px; margin: 0 auto; }
+ h1 { font-size: 22px; margin-bottom: 4px; color: #4a90e2; }
+ .subtitle { font-size: 13px; color: #666; margin-bottom: 24px; }
+ .status-bar { display:flex; align-items:center; gap:10px; background:#111a2e; border:1px solid #1e3a6e; border-radius:10px; padding:10px 16px; margin-bottom:20px; font-size:13px; }
+ .status-dot { width:9px; height:9px; background:#22c55e; border-radius:50%; flex-shrink:0; animation: blink 1.5s infinite; }
+ @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+ .panel { background: #111a2e; border: 1px solid #1e3a6e; border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+ .panel h2 { font-size: 15px; color: #4a90e2; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px; }
+ label { font-size: 13px; color: #aaa; display: block; margin-bottom: 6px; }
+ input, textarea, select {
+ width: 100%; background: #0a0a1a; border: 1px solid #2a3a5e;
+ border-radius: 8px; color: #fff; padding: 10px 12px; font-size: 14px;
+ margin-bottom: 14px; font-family: inherit;
+ }
+ textarea { resize: vertical; min-height: 60px; }
+ .opt-row { display:flex; gap:10px; margin-bottom:10px; align-items:center; }
+ .opt-row input[type="text"] { flex:1; margin-bottom:0; }
+ .opt-row .letter { width:32px; height:32px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:16px; flex-shrink:0; }
+ .letter-A { background:#c8372d; } .letter-B { background:#2d8a4e; } .letter-C { background:#c88a2d; } .letter-D { background:#2d6ac8; }
+ .btn-row { display:flex; gap:10px; flex-wrap:wrap; }
+ button {
+ background: #1e3a6e; color: #fff; border: none; border-radius: 8px;
+ padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer;
+ transition: all 0.2s;
+ }
+ button:hover { background: #2a4a7e; transform: translateY(-1px); }
+ button.secondary { background: #334155; }
+ button.danger { background: #dc2626; }
+ button.success { background: #22c55e; }
+ .toast {
+ position: fixed; bottom: 24px; right: 24px; background: #111a2e;
+ border: 1px solid #2a3a5e; border-radius: 10px; padding: 12px 20px;
+ font-size: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); z-index: 1000;
+ transform: translateY(100px); opacity: 0; transition: all 0.3s;
+ }
+ .toast.show { transform: translateY(0); opacity: 1; }
+ .timer-row { display:flex; gap:10px; align-items:center; }
+ .timer-row input { width:100px; margin-bottom:0; }
+ 
+ /* Image upload section */
+ .image-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; margin-top: 14px; }
+ .image-item { position: relative; background: #0a0a1a; border-radius: 8px; overflow: hidden; border: 1px solid #2a3a5e; }
+ .image-item img { width: 100%; height: 80px; object-fit: cover; display: block; }
+ .image-item .img-name { font-size: 11px; color: #888; padding: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+ .image-item .img-delete { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; background: rgba(220, 38, 38, 0.9); border: none; color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+ .image-item .img-delete:hover { background: #dc2626; }
+ .image-item .img-active { position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 50%; background: rgba(34, 197, 94, 0.9); border: none; color: #fff; font-size: 14px; cursor: pointer; display: none; align-items: center; justify-content: center; }
+ .image-item.active .img-active { display: flex; }
+ .image-item.active { border-color: #22c55e; }
+ .upload-area { border: 2px dashed #2a3a5e; border-radius: 10px; padding: 24px; text-align: center; margin-bottom: 14px; cursor: pointer; transition: all 0.2s; }
+ .upload-area:hover { border-color: #4a90e2; background: rgba(74, 144, 226, 0.05); }
+ .upload-area p { color: #888; font-size: 13px; margin-bottom: 8px; }
+ .upload-area input[type="file"] { display: none; }
+ .btn-upload { background: #4a90e2; display: inline-block; padding: 8px 16px; border-radius: 6px; font-size: 13px; }
 </style>
 </head>
 <body>
 
-<h1>Admin Panel</h1>
-<div class="subtitle">Townhall Strategy & Transformation — Controllo conduttore</div>
+<h1>🎛️ Admin Panel</h1>
+<p class="subtitle">Townhall Strategy & Transformation</p>
 
 <div class="status-bar">
-  <div class="status-dot"></div>
-  <div id="status-text">Firebase connesso &nbsp;|&nbsp; Votanti live: <strong id="status-voters">0</strong> &nbsp;|&nbsp; Domanda attiva: <strong id="status-active">nessuna</strong></div>
+ <div class="status-dot"></div>
+ <span id="connection-status">Connessione a Firebase...</span>
 </div>
 
-<!-- TICKER -->
+<!-- CREATE QUESTION -->
 <div class="panel">
-  <h2>🎞 Ticker (testo scorrevole)</h2>
-  <label>Etichetta badge (es. LIVE, BREAK, ULTIME ORE)</label>
-  <input id="ticker-tag" placeholder="LIVE" maxlength="20">
-  <label>Testo del ticker</label>
-  <textarea id="ticker-text-input" placeholder="Es: Benvenuti ● Vota su marcoraimondi.github.io/townhall ● Grazie per la partecipazione" style="min-height:70px"></textarea>
-  <button class="btn btn-primary btn-sm" id="btn-save-ticker">✔ Aggiorna ticker</button>
+ <h2>➕ Nuova Domanda</h2>
+ <label>Testo domanda</label>
+ <textarea id="q-text" rows="3" placeholder="Es: Qual è il nostro obiettivo principale?"></textarea>
+ 
+ <label>Opzioni</label>
+ <div class="opt-row"><span class="letter letter-A">A</span><input type="text" id="opt-a" placeholder="Opzione A"></div>
+ <div class="opt-row"><span class="letter letter-B">B</span><input type="text" id="opt-b" placeholder="Opzione B"></div>
+ <div class="opt-row"><span class="letter letter-C">C</span><input type="text" id="opt-c" placeholder="Opzione C"></div>
+ <div class="opt-row"><span class="letter letter-D">D</span><input type="text" id="opt-d" placeholder="Opzione D"></div>
+ 
+ <label>Tempo (secondi)</label>
+ <div class="timer-row">
+  <input type="number" id="q-timer" value="40" min="5" max="300" step="5">
+  <span style="color:#888;font-size:13px;">(opzionale, lascia 0 per nessun timer)</span>
+ </div>
+ 
+ <div class="btn-row" style="margin-top:16px;">
+  <button id="btn-add-q" class="success">Aggiungi Domanda</button>
+  <button id="btn-clear-form" class="secondary">Pulisci</button>
+ </div>
+</div>
+
+<!-- ACTIVE QUESTION -->
+<div class="panel">
+ <h2>▶️ Domanda Attiva</h2>
+ <div id="active-q-container" style="display:none;">
+  <p id="active-q-text" style="font-size:15px;margin-bottom:12px;color:#f1f5f9;"></p>
+  <div id="active-q-options" style="font-size:13px;color:#888;margin-bottom:16px;"></div>
+  <div class="btn-row">
+   <button id="btn-stop-q" class="danger">Ferma Domanda</button>
+   <button id="btn-reset-votes" class="secondary">Azzera Voti</button>
+  </div>
+ </div>
+ <p id="no-active-q" style="color:#666;font-size:14px;">Nessuna domanda attiva</p>
+</div>
+
+<!-- IMAGE GALLERY -->
+<div class="panel">
+ <h2>🖼️ Galleria Immagini</h2>
+ <p style="color:#888;font-size:13px;margin-bottom:14px;">Carica slide o immagini da proiettare quando non ci sono domande</p>
+ 
+ <div class="upload-area" onclick="document.getElementById('img-upload').click()">
+  <p>📁 Trascina qui le immagini o clicca per selezionare</p>
+  <span class="btn-upload">Scegli file</span>
+  <input type="file" id="img-upload" accept="image/*" multiple onchange="handleImageUpload(event)">
+ </div>
+ 
+ <div class="btn-row" style="margin-bottom:14px;">
+  <button id="btn-show-image" class="success" onclick="showActiveImage()">Mostra Immagine</button>
+  <button id="btn-hide-image" class="secondary" onclick="hideImage()">Nascondi Immagine</button>
+ </div>
+ 
+ <div class="image-list" id="image-list"></div>
 </div>
 
 <!-- SENTIMENT -->
 <div class="panel">
-  <h2>😊 Sentiment</h2>
-  <p style="font-size:13px;color:#94a3b8;margin-bottom:14px;">Lo storico del grafico viene conservato automaticamente. Usa il pulsante solo per un reset completo.</p>
-  <div class="btn-row">
-    <button class="btn btn-orange btn-sm" id="btn-clear-sentiment">🗑 Azzera sentiment e storico</button>
-  </div>
+ <h2>😊 Sentiment Sala</h2>
+ <div class="btn-row">
+  <button id="btn-clear-sentiment" class="danger">Azzera Sentiment</button>
+ </div>
 </div>
 
-<!-- AGGIUNGI DOMANDA -->
+<!-- RESET ALL -->
 <div class="panel">
-  <h2>➕ Aggiungi domanda</h2>
-  <label>Testo della domanda</label>
-  <textarea id="new-q-text" placeholder="Es: Quale sarà il prodotto con più crescita nel 2026?"></textarea>
-  
-  <label>Durata timer (secondi)</label>
-  <div class="duration-input-row">
-    <input id="new-q-duration" type="number" value="40" min="5" max="300" step="5">
-    <span class="duration-label">secondi (default: 40)</span>
-  </div>
-  
-  <label>Opzione A</label>
-  <div class="opt-row"><div class="lbl lbl-a">A</div><input id="opt-a" placeholder="Opzione A"></div>
-  <label>Opzione B</label>
-  <div class="opt-row"><div class="lbl lbl-b">B</div><input id="opt-b" placeholder="Opzione B"></div>
-  <label>Opzione C (opzionale)</label>
-  <div class="opt-row"><div class="lbl lbl-c">C</div><input id="opt-c" placeholder="Opzione C"></div>
-  <label>Opzione D (opzionale)</label>
-  <div class="opt-row"><div class="lbl lbl-d">D</div><input id="opt-d" placeholder="Opzione D"></div>
-  <button class="btn btn-primary" id="btn-add-q">+ Aggiungi domanda</button>
-</div>
-
-<!-- LISTA DOMANDE -->
-<div class="panel">
-  <h2>📋 Domande</h2>
-  <div class="btn-row" style="margin-bottom:14px">
-    <button class="btn btn-red btn-sm" id="btn-stop">⏹ Ferma tutto</button>
-    <button class="btn btn-gray btn-sm" id="btn-reset-votes">🗑 Voti domanda attiva</button>
-    <button class="btn btn-red btn-sm" id="btn-reset-all-votes">🗑 Azzera TUTTI i voti</button>
-  </div>
-  <div class="q-list" id="q-list">
-    <div style="color:#555;font-size:14px">Nessuna domanda ancora. Aggiungine una sopra.</div>
-  </div>
+ <h2>⚠️ Reset Generale</h2>
+ <div class="btn-row">
+  <button id="btn-reset-all-votes" class="danger">Azzera Tutti i Voti</button>
+ </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, push, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, push, onValue, remove, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAKUJyfsvSvYm-Alvv8xjF39mf9fH_GR40",
-  authDomain: "townhallstrategy.firebaseapp.com",
-  databaseURL: "https://townhallstrategy-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "townhallstrategy",
-  storageBucket: "townhallstrategy.firebasestorage.app",
-  messagingSenderId: "922581580105",
-  appId: "1:922581580105:web:56a85984338c470fb88298"
+ apiKey: "AIzaSyAKUJyfsvSvYm-Alvv8xjF39mf9fH_GR40",
+ authDomain: "townhallstrategy.firebaseapp.com",
+ databaseURL: "https://townhallstrategy-default-rtdb.europe-west1.firebasedatabase.app",
+ projectId: "townhallstrategy",
+ storageBucket: "townhallstrategy.firebasestorage.app",
+ messagingSenderId: "922581580105",
+ appId: "1:922581580105:web:56a85984338c470fb88298"
 };
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-let questions = {};
 let activeQid = null;
-let activeQuestionData = null;
 
-// ── Toast helper ──
-function toast(msg, color) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.style.background = color || '#22c55e';
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2500);
-}
-
-// ── Firebase listeners ──
-onValue(ref(db,'active_question'), snap => {
-  activeQuestionData = snap.val();
-  activeQid = activeQuestionData ? (activeQuestionData.qid || activeQuestionData) : null;
-  
-  let label = 'nessuna';
-  if (activeQid && questions[activeQid]) {
-    label = questions[activeQid].text.substring(0, 30) + '…';
-    if (activeQuestionData.durationSeconds) {
-      label += ` (${activeQuestionData.durationSeconds}s)`;
-    }
-  }
-  document.getElementById('status-active').textContent = label;
-  renderList();
+// Connection status
+onValue(ref(db, '.info/connected'), (snap) => {
+ const statusEl = document.getElementById('connection-status');
+ if (snap.val() === true) {
+  statusEl.textContent = 'Connesso a Firebase';
+  statusEl.style.color = '#22c55e';
+ } else {
+  statusEl.textContent = 'Disconnesso';
+  statusEl.style.color = '#ef4444';
+ }
 });
 
-onValue(ref(db,'questions'), snap => {
-  questions = snap.val() || {};
-  renderList();
-});
-
-onValue(ref(db,'votes'), snap => {
-  const allVotes = snap.val() || {};
-  const count = (activeQid && allVotes[activeQid])
-    ? Object.keys(allVotes[activeQid]).length
-    : 0;
-  document.getElementById('status-voters').textContent = count;
-});
-
-onValue(ref(db,'ticker'), snap => {
-  const t = snap.val();
-  if (!t) return;
-  if (t.text) document.getElementById('ticker-text-input').value = t.text;
-  if (t.tag)  document.getElementById('ticker-tag').value = t.tag;
-});
-
-// ── Render question list ──
-function renderList() {
-  const el = document.getElementById('q-list');
-  const keys = Object.keys(questions);
-  if (!keys.length) {
-    el.innerHTML = '<div style="color:#555;font-size:14px">Nessuna domanda ancora.</div>';
-    return;
-  }
-  el.innerHTML = '';
-  keys.forEach((qid, idx) => {
-    const q = questions[qid];
-    const isActive = qid === activeQid;
-    const div = document.createElement('div');
-    div.className = 'q-item' + (isActive ? ' active-q' : '');
-
-    const textDiv = document.createElement('div');
-    textDiv.className = 'q-item-text';
-    textDiv.innerHTML = `<div>${idx+1}. ${q.text}</div><div class="q-item-sub">${q.options.join(' / ')}</div>`;
-
-    div.appendChild(textDiv);
-    
-    if (isActive) {
-      const badge = document.createElement('span');
-      badge.className = 'active-badge';
-      badge.textContent = 'LIVE';
-      div.appendChild(badge);
-      
-      if (activeQuestionData && activeQuestionData.durationSeconds) {
-        const timerBadge = document.createElement('span');
-        timerBadge.className = 'timer-badge';
-        timerBadge.textContent = activeQuestionData.durationSeconds + 's';
-        div.appendChild(timerBadge);
-      }
-    }
-
-    const btnActivate = document.createElement('button');
-    btnActivate.className = 'btn btn-green btn-sm';
-    btnActivate.textContent = '▶ Attiva';
-    btnActivate.addEventListener('click', async () => {
-      const duration = q.durationSeconds || 40;
-      await set(ref(db,'active_question'), { 
-        qid: qid, 
-        startsAt: Date.now(),
-        durationSeconds: duration 
-      });
-      toast('Domanda attivata!');
-    });
-
-    const btnDelete = document.createElement('button');
-    btnDelete.className = 'btn btn-gray btn-sm';
-    btnDelete.textContent = '✕';
-    btnDelete.addEventListener('click', async () => {
-      if (!confirm('Eliminare questa domanda?')) return;
-      await remove(ref(db,'questions/'+qid));
-      await remove(ref(db,'votes/'+qid));
-      if (activeQid === qid) await set(ref(db,'active_question'), null);
-      toast('Domanda eliminata', '#f59e0b');
-    });
-
-    const btnResetQ = document.createElement('button');
-    btnResetQ.className = 'btn btn-gray btn-sm';
-    btnResetQ.textContent = '🗑 Voti';
-    btnResetQ.title = 'Azzera voti questa domanda';
-    btnResetQ.addEventListener('click', async () => {
-      if (!confirm('Azzerare i voti di questa domanda?')) return;
-      await remove(ref(db,'votes/'+qid));
-      toast('Voti azzerati', '#f59e0b');
-    });
-
-    div.appendChild(btnActivate);
-    div.appendChild(btnResetQ);
-    div.appendChild(btnDelete);
-    el.appendChild(div);
+// Listen for active question
+onValue(ref(db, 'active_question'), (snap) => {
+ const data = snap.val();
+ const container = document.getElementById('active-q-container');
+ const noActive = document.getElementById('no-active-q');
+ 
+ if (data) {
+  activeQid = data.qid || data;
+  get(ref(db, 'questions/' + activeQid)).then((qSnap) => {
+   const q = qSnap.val();
+   if (q) {
+    document.getElementById('active-q-text').textContent = q.text;
+    document.getElementById('active-q-options').textContent = q.options.map((o,i) => String.fromCharCode(65+i) + ') ' + o).join('  •  ');
+    container.style.display = 'block';
+    noActive.style.display = 'none';
+   }
   });
-}
+ } else {
+  activeQid = null;
+  container.style.display = 'none';
+  noActive.style.display = 'block';
+ }
+});
 
-// ── Button listeners ──
+// Add question
 document.getElementById('btn-add-q').addEventListener('click', async () => {
-  const text = document.getElementById('new-q-text').value.trim();
-  const duration = parseInt(document.getElementById('new-q-duration').value) || 40;
-  const opts = ['opt-a','opt-b','opt-c','opt-d']
-    .map(id => document.getElementById(id).value.trim())
-    .filter(Boolean);
-  if (!text || opts.length < 2) {
-    toast('Inserisci la domanda e almeno 2 opzioni', '#ef4444');
-    return;
-  }
-  const newRef = push(ref(db,'questions'));
-  await set(newRef, { 
-    text, 
-    options: opts, 
-    index: Object.keys(questions).length + 1, 
-    created: Date.now(),
-    durationSeconds: duration 
-  });
-  document.getElementById('new-q-text').value = '';
-  document.getElementById('new-q-duration').value = '40';
-  ['opt-a','opt-b','opt-c','opt-d'].forEach(id => document.getElementById(id).value = '');
-  toast('Domanda aggiunta!');
+ const text = document.getElementById('q-text').value.trim();
+ const optA = document.getElementById('opt-a').value.trim();
+ const optB = document.getElementById('opt-b').value.trim();
+ const optC = document.getElementById('opt-c').value.trim();
+ const optD = document.getElementById('opt-d').value.trim();
+ const timer = parseInt(document.getElementById('q-timer').value) || 0;
+ 
+ if (!text || !optA || !optB || !optC || !optD) {
+  toast('Compila tutti i campi', '#ef4444');
+  return;
+ }
+ 
+ const qRef = push(ref(db, 'questions'));
+ const qData = {
+  text,
+  options: [optA, optB, optC, optD],
+  index: (await get(ref(db, 'questions')).then(s => Object.keys(s.val() || {}).length)) + 1,
+  createdAt: Date.now()
+ };
+ 
+ await set(qRef, qData);
+ await set(ref(db, 'active_question'), {
+  qid: qRef.key,
+  startsAt: Date.now(),
+  durationSeconds: timer > 0 ? timer : null
+ });
+ 
+ toast('Domanda pubblicata!', '#22c55e');
+ document.getElementById('btn-clear-form').click();
 });
 
-document.getElementById('btn-stop').addEventListener('click', async () => {
-  await set(ref(db,'active_question'), null);
-  toast('Domanda fermata', '#f59e0b');
+document.getElementById('btn-clear-form').addEventListener('click', () => {
+ document.getElementById('q-text').value = '';
+ document.getElementById('opt-a').value = '';
+ document.getElementById('opt-b').value = '';
+ document.getElementById('opt-c').value = '';
+ document.getElementById('opt-d').value = '';
+ document.getElementById('q-timer').value = '40';
+});
+
+document.getElementById('btn-stop-q').addEventListener('click', async () => {
+ await set(ref(db, 'active_question'), null);
+ toast('Domanda fermata', '#f59e0b');
 });
 
 document.getElementById('btn-reset-votes').addEventListener('click', async () => {
-  if (!activeQid) {
-    toast('Nessuna domanda attiva', '#ef4444');
-    return;
-  }
-  if (!confirm('Azzerare i voti della domanda attiva?')) return;
-  await remove(ref(db,'votes/'+activeQid));
-  toast('Voti azzerati', '#f59e0b');
+ if (!activeQid) { toast('Nessuna domanda attiva', '#ef4444'); return; }
+ if (!confirm('Azzerare i voti della domanda attiva?')) return;
+ await remove(ref(db, 'votes/' + activeQid));
+ toast('Voti azzerati', '#f59e0b');
 });
 
 document.getElementById('btn-reset-all-votes').addEventListener('click', async () => {
-  if (!confirm('Azzerare i voti di TUTTE le domande? Operazione irreversibile.')) return;
-  await remove(ref(db,'votes'));
-  toast('Tutti i voti azzerati', '#ef4444');
-});
-
-document.getElementById('btn-save-ticker').addEventListener('click', async () => {
-  const text = document.getElementById('ticker-text-input').value.trim();
-  const tag  = document.getElementById('ticker-tag').value.trim() || 'LIVE';
-  if (!text) { toast('Inserisci il testo del ticker', '#ef4444'); return; }
-  await set(ref(db,'ticker'), { text, tag, updated: Date.now() });
-  toast('Ticker aggiornato!');
+ if (!confirm('Azzerare i voti di TUTTE le domande?')) return;
+ await remove(ref(db, 'votes'));
+ toast('Tutti i voti azzerati', '#ef4444');
 });
 
 document.getElementById('btn-clear-sentiment').addEventListener('click', async () => {
-  if (!confirm('Azzerare tutto lo storico sentiment?')) return;
-  await remove(ref(db,'sentiment'));
-  toast('Sentiment azzerato', '#f59e0b');
+ if (!confirm('Azzerare tutto lo storico sentiment?')) return;
+ await remove(ref(db, 'sentiment'));
+ toast('Sentiment azzerato', '#f59e0b');
 });
+
+// Toast
+function toast(msg, color='#22c55e') {
+ const t = document.getElementById('toast');
+ t.textContent = msg;
+ t.style.borderColor = color;
+ t.classList.add('show');
+ setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// IMAGE GALLERY FUNCTIONS
+window.imageList = [];
+window.activeImageIndex = -1;
+
+// Load images on startup
+onValue(ref(db, 'images'), (snap) => {
+ const data = snap.val() || {};
+ window.imageList = Object.entries(data).map(([id, img]) => ({ id, ...img })).sort((a,b) => a.order - b.order);
+ renderImageList();
+});
+
+function renderImageList() {
+ const list = document.getElementById('image-list');
+ list.innerHTML = '';
+ window.imageList.forEach((img, idx) => {
+  const item = document.createElement('div');
+  item.className = 'image-item' + (idx === window.activeImageIndex ? ' active' : '');
+  item.innerHTML = `
+   <img src="${img.dataUrl}" alt="${img.name}">
+   <div class="img-name">${img.name}</div>
+   <button class="img-active" onclick="setActiveImage(${idx})">✓</button>
+   <button class="img-delete" onclick="deleteImage('${img.id}')">✕</button>
+  `;
+  list.appendChild(item);
+ });
+}
+
+window.handleImageUpload = async (event) => {
+ const files = event.target.files;
+ if (!files.length) return;
+ 
+ const uploadPromises = [];
+ for (let file of files) {
+  const reader = new FileReader();
+  const promise = new Promise((resolve, reject) => {
+   reader.onload = async (e) => {
+    const dataUrl = e.target.result;
+    const imgRef = push(ref(db, 'images'));
+    const imgData = {
+     name: file.name,
+     dataUrl: dataUrl,
+     order: window.imageList.length + uploadPromises.length,
+     uploadedAt: Date.now()
+    };
+    await set(imgRef, imgData);
+    resolve();
+   };
+   reader.onerror = reject;
+  });
+  reader.readAsDataURL(file);
+  uploadPromises.push(promise);
+ }
+ 
+ await Promise.all(uploadPromises);
+ toast(`${files.length} immagine/i caricata/e`, '#22c55e');
+ event.target.value = '';
+};
+
+window.deleteImage = async (id) => {
+ if (!confirm('Eliminare questa immagine?')) return;
+ await remove(ref(db, 'images/' + id));
+ if (window.activeImageIndex >= 0) {
+  const idx = window.imageList.findIndex(img => img.id === id);
+  if (idx === window.activeImageIndex) {
+   await hideImage();
+  }
+ }
+ toast('Immagine eliminata', '#f59e0b');
+};
+
+window.setActiveImage = async (idx) => {
+ window.activeImageIndex = idx;
+ await set(ref(db, 'active_image'), idx >= 0 ? idx : null);
+ renderImageList();
+ toast('Immagine selezionata', '#22c55e');
+};
+
+window.showActiveImage = async () => {
+ if (window.imageList.length === 0) {
+  toast('Nessuna immagine caricata', '#ef4444');
+  return;
+ }
+ if (window.activeImageIndex < 0) {
+  window.activeImageIndex = 0;
+ }
+ await set(ref(db, 'active_image'), window.activeImageIndex);
+ toast('Immagine proiettata', '#22c55e');
+};
+
+window.hideImage = async () => {
+ window.activeImageIndex = -1;
+ await set(ref(db, 'active_image'), null);
+ renderImageList();
+ toast('Immagine nascosta', '#f59e0b');
+};
 </script>
 </body>
 </html>
