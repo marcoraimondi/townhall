@@ -491,8 +491,50 @@ let curQid = null;
 let votesUnsub = null;
 let timerInterval = null;
 
+// Realtime listener for active_image
+let activeImageIdx = null;
+let cachedImages = null;
+
+onValue(ref(db,'active_image'), imgSnap => {
+  activeImageIdx = imgSnap.val();
+  console.log('[ACTIVE_IMAGE_LISTENER] Index:', activeImageIdx);
+  updateDisplayState();
+});
+
+onValue(ref(db,'images'), imagesSnap => {
+  const images = imagesSnap.val() || {};
+  cachedImages = Object.values(images).sort((a,b) => a.order - b.order);
+  console.log('[IMAGES_LISTENER] Loaded', cachedImages.length, 'images');
+  updateDisplayState();
+});
+
+let activeQuestion = null;
+
+function updateDisplayState() {
+  const imgArea = document.getElementById('image-area');
+  const qArea = document.getElementById('question-area');
+  
+  if (activeQuestion) {
+    // Domanda attiva: nascondi immagine, mostra domanda
+    imgArea.style.display = 'none';
+    qArea.style.display = 'flex';
+  } else if (activeImageIdx !== null && activeImageIdx !== undefined && cachedImages && cachedImages[activeImageIdx]) {
+    // Nessuna domanda, immagine attiva
+    console.log('[DISPLAY] Showing image:', cachedImages[activeImageIdx].name);
+    document.getElementById('display-image').src = cachedImages[activeImageIdx].dataUrl;
+    imgArea.style.display = 'flex';
+    qArea.style.display = 'none';
+  } else {
+    // Nessuna domanda, nessuna immagine
+    imgArea.style.display = 'none';
+    qArea.style.display = 'flex';
+    document.getElementById('question-display').style.display = 'none';
+  }
+}
+
 onValue(ref(db,'active_question'), snap => {
   const data = snap.val();
+  activeQuestion = data;
   
   console.log('[DISPLAY_ACTIVE_QUESTION] Data:', JSON.stringify(data));
   
@@ -503,47 +545,15 @@ onValue(ref(db,'active_question'), snap => {
   }
   
   if (!data) {
-    // No question - check for active image
-    console.log('[DISPLAY_ACTIVE_QUESTION] No question, checking image...');
-    get(ref(db,'active_image')).then(imgSnap => {
-      const activeImgIdx = imgSnap.val();
-      console.log('[DISPLAY_ACTIVE_IMAGE] Index:', activeImgIdx);
-      
-      if (activeImgIdx !== null && activeImgIdx !== undefined) {
-        // Show image
-        console.log('[DISPLAY_ACTIVE_IMAGE] Loading images...');
-        get(ref(db,'images')).then(imagesSnap => {
-          const images = imagesSnap.val() || {};
-          const imageList = Object.values(images).sort((a,b) => a.order - b.order);
-          console.log('[DISPLAY_ACTIVE_IMAGE] Total images:', imageList.length, 'Active index:', activeImgIdx);
-          
-          if (imageList[activeImgIdx]) {
-            console.log('[DISPLAY_ACTIVE_IMAGE] Showing:', imageList[activeImgIdx].name);
-            document.getElementById('question-area').style.display = 'none';
-            document.getElementById('image-area').style.display = 'flex';
-            document.getElementById('display-image').src = imageList[activeImgIdx].dataUrl;
-          } else {
-            console.log('[DISPLAY_ACTIVE_IMAGE] No image at index', activeImgIdx);
-            document.getElementById('question-area').style.display = 'block';
-            document.getElementById('question-display').style.display = 'none';
-          }
-        });
-      } else {
-        console.log('[DISPLAY_ACTIVE_IMAGE] No active image');
-        document.getElementById('question-area').style.display = 'block';
-        document.getElementById('question-display').style.display = 'none';
-      }
-    });
-    
     document.getElementById('timer-box').classList.remove('visible');
     curQid = null;
     if (votesUnsub) votesUnsub();
+    updateDisplayState();
     return;
   }
   
   // Show question, hide image
-  document.getElementById('question-area').style.display = 'block';
-  document.getElementById('image-area').style.display = 'none';
+  updateDisplayState();
   
   // Support both old format (string) and new format (object)
   const qid = data.qid || data;
