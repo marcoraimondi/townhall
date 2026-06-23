@@ -332,14 +332,16 @@ const userPresenceRef = ref(db, 'connected_users/' + presenceId);
 console.log('[INIT] User:', userId, 'Presence:', presenceId);
 
 // HEARTBEAT approach - più affidabile di onDisconnect su Safari mobile
-// Ogni client aggiorna il proprio timestamp ogni 3 secondi
-// I client con timestamp > 10 secondi fa vengono considerati "disconnessi"
+// Ogni client aggiorna il proprio timestamp ogni 5 secondi
+// I client con timestamp > 60 secondi fa vengono considerati "disconnessi"
+// Pagina in background: heartbeat rallenta ma pagina resta "viva" per 60s
 
 function sendHeartbeat() {
   const now = Date.now();
   set(userPresenceRef, {
     ts: now,
-    userAgent: navigator.userAgent.substring(0, 50)
+    userAgent: navigator.userAgent.substring(0, 50),
+    visible: document.visibilityState === 'visible'
   }).then(() => {
     console.log('[HEARTBEAT] Sent @', new Date(now).toISOString());
   }).catch((err) => {
@@ -347,16 +349,35 @@ function sendHeartbeat() {
   });
 }
 
-// Invia heartbeat immediato e poi ogni 3 secondi
+// Invia heartbeat immediato
 sendHeartbeat();
-const heartbeatInterval = setInterval(sendHeartbeat, 3000);
 
-// Cleanup: rimuovi entry vecchie (> 10 secondi)
+// Heartbeat ogni 5 secondi quando visibile, 15s quando in background
+let heartbeatInterval;
+function scheduleHeartbeat() {
+  if (heartbeatInterval) clearInterval(heartbeatInterval);
+  const interval = document.visibilityState === 'visible' ? 5000 : 15000;
+  heartbeatInterval = setInterval(sendHeartbeat, interval);
+  console.log('[HEARTBEAT] Scheduled every', interval, 'ms (visible:', document.visibilityState === 'visible', ')');
+}
+
+scheduleHeartbeat();
+
+// Quando la pagina torna visibile, invia heartbeat immediato
+document.addEventListener('visibilitychange', () => {
+  console.log('[VISIBILITY] State:', document.visibilityState);
+  scheduleHeartbeat();
+  if (document.visibilityState === 'visible') {
+    sendHeartbeat(); // Immediate heartbeat when coming back
+  }
+});
+
+// Cleanup: rimuovi entry vecchie (> 60 secondi)
 function cleanupStaleUsers() {
   get(ref(db, 'connected_users')).then((snap) => {
     const users = snap.val() || {};
     const now = Date.now();
-    const staleThreshold = 10000; // 10 secondi
+    const staleThreshold = 60000; // 60 secondi - pagina in standby resta "viva"
     
     const updates = {};
     let staleCount = 0;
@@ -379,16 +400,16 @@ function cleanupStaleUsers() {
   });
 }
 
-// Esegui cleanup ogni 2 secondi
-setInterval(cleanupStaleUsers, 2000);
+// Esegui cleanup ogni 5 secondi
+setInterval(cleanupStaleUsers, 5000);
 
-// Conta utenti connessi (solo quelli con timestamp < 10 secondi)
+// Conta utenti connessi (solo quelli con timestamp < 60 secondi)
 function updateConnectedCount() {
   get(ref(db, 'connected_users'))
     .then((snap) => {
       const users = snap.val() || {};
       const now = Date.now();
-      const freshThreshold = 10000; // 10 secondi
+      const freshThreshold = 60000; // 60 secondi
       
       // Conta solo utenti "fresh" (timestamp recente)
       let freshCount = 0;
@@ -407,9 +428,9 @@ function updateConnectedCount() {
     });
 }
 
-// Aggiorna conteggio immediatamente e poi ogni secondo
+// Aggiorna conteggio immediatamente e poi ogni 2 secondi
 updateConnectedCount();
-setInterval(updateConnectedCount, 1000);
+setInterval(updateConnectedCount, 2000);
 
 console.log('[INIT] Heartbeat + cleanup started');
 
