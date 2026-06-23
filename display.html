@@ -206,11 +206,13 @@ html, body {
   justify-content:center;
   z-index:10;
 }
-#image-area img {
+#image-area img, #image-area video {
   max-width:70%;
   max-height:70%;
   object-fit:contain;
 }
+#logo-video { display:none; }
+#logo-img { display:none; }
 </style>
 </head>
 <body>
@@ -234,6 +236,7 @@ html, body {
 
   <!-- IMAGE OVERLAY (covers entire main area) -->
   <div id="image-area">
+    <video id="logo-video" src="https://marcoraimondi.github.io/townhall/logo.mp4" autoplay loop muted playsinline></video>
     <img id="display-image" src="" alt="Slide">
   </div>
 
@@ -559,14 +562,19 @@ function updateDisplayState() {
     aqDisplay.style.display = 'flex';
   } else if (activeImageIdx !== null && activeImageIdx !== undefined && cachedImages && cachedImages[activeImageIdx]) {
     // Immagine attiva
+    document.getElementById('logo-video').style.display = 'none';
     document.getElementById('display-image').src = cachedImages[activeImageIdx].dataUrl;
+    document.getElementById('display-image').style.display = 'block';
     imgArea.style.display = 'flex';
     qArea.style.display = 'flex';
     qDisplay.style.display = 'none';
     aqDisplay.style.display = 'none';
   } else {
-    // Nessuna domanda, nessuna immagine — mostra logo
-    document.getElementById('display-image').src = 'https://marcoraimondi.github.io/townhall/logo.png';
+    // Nessuna domanda, nessuna immagine — mostra video logo
+    document.getElementById('display-image').style.display = 'none';
+    const vid = document.getElementById('logo-video');
+    vid.style.display = 'block';
+    vid.play();
     imgArea.style.display = 'flex';
     qArea.style.display = 'flex';
     qDisplay.style.display = 'none';
