@@ -522,7 +522,8 @@ function updateDisplayState() {
     console.log('[DISPLAY] Showing image:', cachedImages[activeImageIdx].name);
     document.getElementById('display-image').src = cachedImages[activeImageIdx].dataUrl;
     imgArea.style.display = 'flex';
-    qArea.style.display = 'none';
+    qArea.style.display = 'flex'; // lasciamo visibile per tenere il layout (sentiment a destra)
+    document.getElementById('question-display').style.display = 'none';
   } else {
     // Nessuna domanda, nessuna immagine
     imgArea.style.display = 'none';
