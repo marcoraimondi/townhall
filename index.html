@@ -320,9 +320,16 @@ let hasVoted = false;
 let activeQuestion = null;
 let timerInterval = null;
 
-const userPresenceRef = ref(db, 'connected_users/' + sessionId);
+// Sessione persistente - stesso browser = stesso ID
+const PRESENCE_KEY = 'townhall_presence_id';
+let presenceId = localStorage.getItem(PRESENCE_KEY);
+if (!presenceId) {
+  presenceId = 'presence_' + Math.random().toString(36).substr(2, 9);
+  localStorage.setItem(PRESENCE_KEY, presenceId);
+}
+const userPresenceRef = ref(db, 'connected_users/' + presenceId);
 
-console.log('[INIT] User:', userId, 'Session:', sessionId);
+console.log('[INIT] User:', userId, 'Presence:', presenceId);
 
 // HEARTBEAT approach - più affidabile di onDisconnect su Safari mobile
 // Ogni client aggiorna il proprio timestamp ogni 3 secondi
