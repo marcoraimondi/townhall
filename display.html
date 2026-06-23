@@ -215,8 +215,16 @@ html, body {
 
 <div class="main" id="main">
 
-  <div class="vote-area">
-    <div id="question-display">
+  <!-- IMAGE SECTION (when no question) -->
+  <div class="vote-area" id="image-area" style="display:none;">
+    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+      <img id="display-image" src="" alt="Slide" style="max-width:100%;max-height:75vh;object-fit:contain;border-radius:12px;">
+    </div>
+  </div>
+
+  <!-- QUESTION SECTION -->
+  <div class="vote-area" id="question-area">
+    <div id="question-display" style="display:none;">
       <!-- Timer -->
       <div class="timer-display-box" id="timer-box">
         <span class="timer-icon">⏱️</span>
@@ -228,6 +236,7 @@ html, body {
       <div class="q-text" id="q-text"></div>
       <div class="bars" id="bars"></div>
     </div>
+  </div>
   </div>
 
   <div class="sentiment-panel">
@@ -470,6 +479,8 @@ let timerInterval = null;
 onValue(ref(db,'active_question'), snap => {
   const data = snap.val();
   
+  console.log('[DISPLAY_ACTIVE_QUESTION] Data:', JSON.stringify(data));
+  
   // Clear existing timer
   if (timerInterval) {
     clearInterval(timerInterval);
@@ -477,12 +488,47 @@ onValue(ref(db,'active_question'), snap => {
   }
   
   if (!data) {
-    document.getElementById('question-display').style.display = 'none';
+    // No question - check for active image
+    console.log('[DISPLAY_ACTIVE_QUESTION] No question, checking image...');
+    get(ref(db,'active_image')).then(imgSnap => {
+      const activeImgIdx = imgSnap.val();
+      console.log('[DISPLAY_ACTIVE_IMAGE] Index:', activeImgIdx);
+      
+      if (activeImgIdx !== null && activeImgIdx !== undefined) {
+        // Show image
+        console.log('[DISPLAY_ACTIVE_IMAGE] Loading images...');
+        get(ref(db,'images')).then(imagesSnap => {
+          const images = imagesSnap.val() || {};
+          const imageList = Object.values(images).sort((a,b) => a.order - b.order);
+          console.log('[DISPLAY_ACTIVE_IMAGE] Total images:', imageList.length, 'Active index:', activeImgIdx);
+          
+          if (imageList[activeImgIdx]) {
+            console.log('[DISPLAY_ACTIVE_IMAGE] Showing:', imageList[activeImgIdx].name);
+            document.getElementById('question-area').style.display = 'none';
+            document.getElementById('image-area').style.display = 'block';
+            document.getElementById('display-image').src = imageList[activeImgIdx].dataUrl;
+          } else {
+            console.log('[DISPLAY_ACTIVE_IMAGE] No image at index', activeImgIdx);
+            document.getElementById('question-area').style.display = 'block';
+            document.getElementById('question-display').style.display = 'none';
+          }
+        });
+      } else {
+        console.log('[DISPLAY_ACTIVE_IMAGE] No active image');
+        document.getElementById('question-area').style.display = 'block';
+        document.getElementById('question-display').style.display = 'none';
+      }
+    });
+    
     document.getElementById('timer-box').classList.remove('visible');
     curQid = null;
     if (votesUnsub) votesUnsub();
     return;
   }
+  
+  // Show question, hide image
+  document.getElementById('question-area').style.display = 'block';
+  document.getElementById('image-area').style.display = 'none';
   
   // Support both old format (string) and new format (object)
   const qid = data.qid || data;
