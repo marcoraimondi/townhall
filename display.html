@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Townhall Strategy &amp; Transformation</title>
+<title>Townhall Strategy & Transformation</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,12 +28,41 @@ html, body {
 .topbar-divider { width:2px; height:30px; background:#1d4ed8; }
 .topbar-sub { font-size:12px; color:#94a3b8; letter-spacing:2px; text-transform:uppercase; }
 .topbar-right { display:flex; align-items:center; gap:20px; }
-.live-pill { display:flex; align-items:center; gap:7px; background:#dc2626; border-radius:4px; padding:4px 10px; }
-.live-dot { width:7px; height:7px; background:#fff; border-radius:50%; animation:blink 1s infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
-.live-text { font-size:11px; font-weight:700; letter-spacing:2px; }
-.voter-pill { font-size:12px; color:#94a3b8; }
-.voter-pill strong { color:#fff; font-size:16px; }
+
+/* LIVE Badge con contatore */
+.live-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(220, 38, 38, 0.15);
+  border: 2px solid #dc2626;
+  border-radius: 20px;
+  padding: 6px 16px;
+}
+.live-dot {
+  width: 10px;
+  height: 10px;
+  background: #dc2626;
+  border-radius: 50%;
+  animation: blink 1s infinite;
+}
+@keyframes blink {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.live-text {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #dc2626;
+}
+.live-count {
+  font-size: 18px;
+  font-weight: 900;
+  color: #fff;
+  min-width: 28px;
+  text-align: right;
+}
 
 /* MAIN */
 .main { flex:1; display:flex; overflow:hidden; height:0; min-height:0; }
@@ -46,6 +75,49 @@ html, body {
   overflow:hidden; min-width:0;
 }
 #question-display { display:none; flex-direction:column; flex:1; min-height:0; }
+
+/* Timer display */
+.timer-display-box {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  background: rgba(7, 20, 40, 0.8);
+  border: 2px solid #1e3a6e;
+  border-radius: 10px;
+  padding: 10px 20px;
+  margin-bottom: 16px;
+  width: fit-content;
+}
+.timer-display-box.visible {
+  display: flex;
+}
+.timer-icon {
+  font-size: 24px;
+}
+.timer-countdown {
+  font-size: 28px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: #60a5fa;
+}
+.timer-countdown.warning {
+  color: #f59e0b;
+  animation: pulse-warning 0.5s infinite;
+}
+.timer-countdown.expired {
+  color: #ef4444;
+}
+@keyframes pulse-warning {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.timer-label {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
 .q-badge { display:inline-block; background:#1d4ed8; border-radius:4px; padding:4px 12px; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; }
 .q-text { font-size:26px; font-weight:900; line-height:1.3; color:#f1f5f9; margin-bottom:20px; }
 .bars { display:flex; flex-direction:column; gap:11px; flex:1; justify-content:center; min-height:0; overflow:hidden; }
@@ -128,13 +200,16 @@ html, body {
 
 <div class="topbar">
   <div class="topbar-left">
-    <div class="topbar-logo">Townhall <span>Strategy &amp; Transformation</span></div>
+    <div class="topbar-logo">Townhall <span>Strategy & Transformation</span></div>
     <div class="topbar-divider"></div>
     <div class="topbar-sub">Live Voting</div>
   </div>
   <div class="topbar-right">
-    <div class="voter-pill">Votanti: <strong id="voter-count">0</strong></div>
-    <div class="live-pill"><div class="live-dot"></div><div class="live-text">LIVE</div></div>
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      <span class="live-text">LIVE</span>
+      <span class="live-count" id="live-count">0</span>
+    </div>
   </div>
 </div>
 
@@ -142,6 +217,13 @@ html, body {
 
   <div class="vote-area">
     <div id="question-display">
+      <!-- Timer -->
+      <div class="timer-display-box" id="timer-box">
+        <span class="timer-icon">⏱️</span>
+        <span class="timer-countdown" id="timer-countdown">0:40</span>
+        <span class="timer-label">Tempo restante</span>
+      </div>
+      
       <div class="q-badge" id="q-num">Domanda 1</div>
       <div class="q-text" id="q-text"></div>
       <div class="bars" id="bars"></div>
@@ -179,7 +261,7 @@ html, body {
   <div class="ticker-time" id="clock">--:--</div>
   <div class="ticker-tag" id="ticker-tag">LIVE</div>
   <div class="ticker-scroll-wrap">
-    <span id="ticker-text">Vota su marcoraimondi.github.io/pages/townhall &nbsp;&#9679;&nbsp; Il tuo voto è anonimo &nbsp;&#9679;&nbsp; Townhall Strategy &amp; Transformation 2026</span>
+    <span id="ticker-text">Vota su marcoraimondi.github.io/townhall &nbsp;&#9679;&nbsp; Il tuo voto è anonimo &nbsp;&#9679;&nbsp; Townhall Strategy & Transformation 2026</span>
   </div>
 </div>
 
@@ -379,74 +461,127 @@ onValue(ref(db,'sentiment'), snap => {
 });
 
 /* ═══════════════════════════════════════
-   ACTIVE QUESTION
+   ACTIVE QUESTION + TIMER
 ═══════════════════════════════════════ */
 let curQid = null;
 let votesUnsub = null;
+let timerInterval = null;
 
 onValue(ref(db,'active_question'), snap => {
-  const qid = snap.val();
-  const mainEl = document.getElementById('main');
-
-  if (!qid) {
-    mainEl.classList.add('fs');
+  const data = snap.val();
+  
+  // Clear existing timer
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  
+  if (!data) {
     document.getElementById('question-display').style.display = 'none';
-    document.getElementById('voter-count').textContent = '0';
-    if (votesUnsub) { votesUnsub(); votesUnsub = null; }
+    document.getElementById('timer-box').classList.remove('visible');
     curQid = null;
-    // Force Chart.js to resize after layout change
-    setTimeout(() => chart.resize(), 50);
+    if (votesUnsub) votesUnsub();
     return;
   }
-
-  mainEl.classList.remove('fs');
-  if (qid === curQid) return;
-  // Force Chart.js resize back to narrower column
-  setTimeout(() => chart.resize(), 50);
+  
+  // Support both old format (string) and new format (object)
+  const qid = data.qid || data;
   curQid = qid;
-  loadQuestion(qid);
-});
-
-async function loadQuestion(qid) {
-  const snap = await get(ref(db,'questions/'+qid));
-  const q = snap.val();
-  if (!q) return;
-
+  
   document.getElementById('question-display').style.display = 'flex';
-  document.getElementById('q-num').textContent = 'Domanda ' + (q.index || '');
-  document.getElementById('q-text').textContent = q.text;
-
-  const barsEl = document.getElementById('bars');
-  barsEl.innerHTML = '';
-  q.options.forEach((opt, i) => {
-    const row = document.createElement('div');
-    row.className = 'bar-row';
-    row.innerHTML =
-      `<div class="bar-letter ${LLETTER[i]}">${LETTERS[i]}</div>` +
-      `<div class="bar-label">${opt}</div>` +
-      `<div class="bar-track"><div class="bar-fill ${LFILL[i]}" id="b${i}" style="width:0%"></div></div>` +
-      `<div class="bar-count" id="c${i}">0</div>` +
-      `<div class="bar-pct" id="p${i}">0%</div>`;
-    barsEl.appendChild(row);
-  });
-
-  if (votesUnsub) { votesUnsub(); votesUnsub = null; }
-  votesUnsub = onValue(ref(db,'votes/'+qid), snap => {
-    const votes = snap.val() || {};
-    const counts = new Array(q.options.length).fill(0);
-    Object.values(votes).forEach(v => { if (typeof v === 'number' && v < counts.length) counts[v]++; });
-    const total = counts.reduce((a,b)=>a+b,0);
-    document.getElementById('voter-count').textContent = total;
-    counts.forEach((c,i) => {
-      const pct = total ? Math.round(c/total*100) : 0;
-      const b = document.getElementById('b'+i); if(b) b.style.width = pct+'%';
-      const cv = document.getElementById('c'+i); if(cv) cv.textContent = c;
-      const p = document.getElementById('p'+i); if(p) p.textContent = pct+'%';
+  document.getElementById('q-num').textContent = 'Domanda ' + (data.index || '?');
+  
+  // Get question details
+  get(ref(db,'questions/'+qid)).then(qSnap => {
+    const q = qSnap.val();
+    if (!q) return;
+    
+    document.getElementById('q-text').textContent = q.text;
+    
+    // Render bars
+    const barsEl = document.getElementById('bars');
+    barsEl.innerHTML = '';
+    q.options.forEach((opt, i) => {
+      const row = document.createElement('div');
+      row.className = 'bar-row';
+      row.innerHTML = `
+        <div class="bar-letter ${LLETTER[i]}">${LETTERS[i]}</div>
+        <div class="bar-label">${opt}</div>
+        <div class="bar-track"><div class="bar-fill ${LFILL[i]}" id="fill-${qid}-${i}" style="width:0%"></div></div>
+        <div class="bar-count" id="count-${qid}-${i}">0</div>
+        <div class="bar-pct" id="pct-${qid}-${i}">0%</div>
+      `;
+      barsEl.appendChild(row);
     });
   });
-}
+  
+  // Listen to votes
+  if (votesUnsub) votesUnsub();
+  votesUnsub = onValue(ref(db,'votes/'+qid), vSnap => {
+    const votes = vSnap.val() || {};
+    const counts = [0,0,0,0];
+    Object.values(votes).forEach(optIdx => {
+      if (typeof optIdx === 'number' && optIdx >= 0 && optIdx < 4) counts[optIdx]++;
+    });
+    const total = counts.reduce((a,b)=>a+b, 0);
+    
+    counts.forEach((c, i) => {
+      const pct = total ? Math.round(c / total * 100) : 0;
+      const fillEl = document.getElementById(`fill-${qid}-${i}`);
+      const countEl = document.getElementById(`count-${qid}-${i}`);
+      const pctEl = document.getElementById(`pct-${qid}-${i}`);
+      if (fillEl) fillEl.style.width = pct + '%';
+      if (countEl) countEl.textContent = c;
+      if (pctEl) pctEl.textContent = pct + '%';
+    });
+  });
+  
+  // Start timer if duration is set
+  if (data.startsAt && data.durationSeconds) {
+    const durationMs = data.durationSeconds * 1000;
+    const deadline = data.startsAt + durationMs;
+    const timerBox = document.getElementById('timer-box');
+    const timerDisplay = document.getElementById('timer-countdown');
+    
+    timerBox.classList.add('visible');
+    
+    const updateTimer = () => {
+      const now = Date.now();
+      const remaining = Math.max(0, Math.floor((deadline - now) / 1000));
+      
+      const mins = Math.floor(remaining / 60);
+      const secs = remaining % 60;
+      timerDisplay.textContent = `${mins}:${String(secs).padStart(2, '0')}`;
+      
+      if (remaining <= 10 && remaining > 0) {
+        timerDisplay.classList.add('warning');
+        timerDisplay.classList.remove('expired');
+      } else if (remaining <= 0) {
+        timerDisplay.classList.add('expired');
+        timerDisplay.classList.remove('warning');
+        timerDisplay.textContent = '0:00';
+        clearInterval(timerInterval);
+      } else {
+        timerDisplay.classList.remove('warning');
+        timerDisplay.classList.remove('expired');
+      }
+    };
+    
+    updateTimer();
+    timerInterval = setInterval(updateTimer, 1000);
+  } else {
+    document.getElementById('timer-box').classList.remove('visible');
+  }
+});
 
-})(); // chiude l'async IIFE
+// Count connected users for LIVE badge
+onValue(ref(db, 'connected_users'), (snap) => {
+  const users = snap.val() || {};
+  const count = Object.keys(users).length;
+  document.getElementById('live-count').textContent = count;
+});
+
+})();
 </script>
 </body>
 </html>
