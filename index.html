@@ -457,9 +457,53 @@ setInterval(updateConnectedCount, 2000);
 
 console.log('[INIT] Heartbeat + cleanup started');
 
+// Stato globale per realtime
+let _activeImageIdx = null;
+let _cachedImages = null;
+let _activeQuestionData = null;
+
+function updateIndexState() {
+  const waiting = document.getElementById('waiting');
+  const voteSection = document.getElementById('vote-section');
+  const imageSection = document.getElementById('image-section');
+
+  if (_activeQuestionData) {
+    // Domanda attiva
+    imageSection.style.display = 'none';
+    // (il resto lo gestisce il listener sotto)
+  } else if (_activeImageIdx !== null && _activeImageIdx !== undefined && _cachedImages && _cachedImages[_activeImageIdx]) {
+    // Immagine attiva
+    console.log('[INDEX] Showing image:', _cachedImages[_activeImageIdx].name);
+    document.getElementById('display-image').src = _cachedImages[_activeImageIdx].dataUrl;
+    waiting.style.display = 'none';
+    voteSection.style.display = 'none';
+    imageSection.style.display = 'block';
+  } else {
+    // Nessuna domanda, nessuna immagine
+    waiting.style.display = 'flex';
+    voteSection.style.display = 'none';
+    imageSection.style.display = 'none';
+  }
+}
+
+// Listener realtime per active_image
+onValue(ref(db, 'active_image'), imgSnap => {
+  _activeImageIdx = imgSnap.val();
+  console.log('[ACTIVE_IMAGE_LISTENER] Index:', _activeImageIdx);
+  if (!_activeQuestionData) updateIndexState();
+});
+
+// Listener realtime per images
+onValue(ref(db, 'images'), imagesSnap => {
+  const images = imagesSnap.val() || {};
+  _cachedImages = Object.values(images).sort((a,b) => a.order - b.order);
+  if (!_activeQuestionData) updateIndexState();
+});
+
 // Listen for active question
 onValue(ref(db, 'active_question'), async (snap) => {
   const data = snap.val();
+  _activeQuestionData = data;
   
   console.log('[ACTIVE_QUESTION] Data:', JSON.stringify(data));
   
@@ -469,41 +513,9 @@ onValue(ref(db, 'active_question'), async (snap) => {
   }
   
   if (!data) {
-    // No active question - check for active image
-    console.log('[ACTIVE_QUESTION] No question, checking for image...');
-    const imgSnap = await get(ref(db, 'active_image'));
-    const activeImgIdx = imgSnap.val();
-    
-    console.log('[ACTIVE_IMAGE] Index:', activeImgIdx);
-    
-    if (activeImgIdx !== null && activeImgIdx !== undefined) {
-      // Show image
-      console.log('[ACTIVE_IMAGE] Loading images...');
-      const imagesSnap = await get(ref(db, 'images'));
-      const images = imagesSnap.val() || {};
-      const imageList = Object.values(images).sort((a,b) => a.order - b.order);
-      
-      console.log('[ACTIVE_IMAGE] Total images:', imageList.length, 'Active index:', activeImgIdx);
-      
-      if (imageList[activeImgIdx]) {
-        console.log('[ACTIVE_IMAGE] Showing:', imageList[activeImgIdx].name);
-        document.getElementById('waiting').style.display = 'none';
-        document.getElementById('vote-section').style.display = 'none';
-        document.getElementById('image-section').style.display = 'block';
-        document.getElementById('display-image').src = imageList[activeImgIdx].dataUrl;
-        return;
-      } else {
-        console.log('[ACTIVE_IMAGE] No image at index', activeImgIdx);
-      }
-    }
-    
-    // No question, no image - show waiting
-    console.log('[ACTIVE_QUESTION] Showing waiting screen');
-    document.getElementById('waiting').style.display = 'flex';
-    document.getElementById('vote-section').style.display = 'none';
-    document.getElementById('image-section').style.display = 'none';
     activeQuestion = null;
     hasVoted = false;
+    updateIndexState();
     return;
   }
   
