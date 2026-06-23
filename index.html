@@ -265,6 +265,61 @@
     border-color: #4a7fd4;
     transform: scale(1.2);
   }
+
+  /* Domanda al pubblico */
+  .ask-section {
+    width: 100%;
+    max-width: 480px;
+    margin-top: 24px;
+    border-top: 1px solid #1a2540;
+    padding-top: 20px;
+  }
+  .ask-title {
+    font-size: 13px;
+    color: #888;
+    text-align: center;
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .ask-row {
+    display: flex;
+    gap: 8px;
+  }
+  .ask-input {
+    flex: 1;
+    background: #111a2e;
+    border: 1px solid #1e3060;
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: #f1f5f9;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .ask-input:focus { border-color: #4a7fd4; }
+  .ask-input::placeholder { color: #475569; }
+  .ask-btn {
+    background: #1e4a9a;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s;
+    white-space: nowrap;
+  }
+  .ask-btn:hover { background: #2563c7; }
+  .ask-btn:disabled { background: #1a2540; color: #475569; cursor: default; }
+  .ask-ok {
+    text-align: center;
+    font-size: 13px;
+    color: #22c55e;
+    margin-top: 8px;
+    display: none;
+  }
 </style>
 </head>
 <body>
@@ -318,9 +373,19 @@
   <p style="text-align:center;color:#888;font-size:13px;margin-top:12px;">Il tuo sentiment aggiorna la sala in tempo reale</p>
 </div>
 
+<!-- DOMANDA AL RELATORE -->
+<div class="ask-section" id="ask-section">
+  <div class="ask-title">Fai una domanda</div>
+  <div class="ask-row">
+    <input type="text" class="ask-input" id="ask-input" placeholder="Scrivi la tua domanda..." maxlength="200">
+    <button class="ask-btn" id="ask-btn" onclick="sendQuestion()">Invia</button>
+  </div>
+  <div class="ask-ok" id="ask-ok">✓ Domanda inviata!</div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, get, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, push, onValue, get, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAKUJyfsvSvYm-Alvv8xjF39mf9fH_GR40",
@@ -628,6 +693,30 @@ window.voteSentiment = function(val) {
   set(ref(db, 'sentiment/' + userId), { value: val, ts: Date.now() });
   document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.emoji-btn[data-val="' + val + '"]').classList.add('active');
+};
+
+// Domanda al relatore
+window.sendQuestion = function() {
+  const input = document.getElementById('ask-input');
+  const text = input.value.trim();
+  if (!text) return;
+  const btn = document.getElementById('ask-btn');
+  const ok = document.getElementById('ask-ok');
+  btn.disabled = true;
+  push(ref(db, 'audience_questions'), {
+    text,
+    ts: Date.now(),
+    userId
+  }).then(() => {
+    input.value = '';
+    ok.style.display = 'block';
+    setTimeout(() => {
+      ok.style.display = 'none';
+      btn.disabled = false;
+    }, 3000);
+  }).catch(() => {
+    btn.disabled = false;
+  });
 };
 </script>
 </body>
