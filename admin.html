@@ -46,7 +46,8 @@
 
  /* Audience questions */
  .aq-item { background:#0a0f1e; border:1px solid #1e3060; border-radius:10px; padding:12px 14px; margin-bottom:10px; }
- .aq-item.live { border-color:#22c55e; background:#061a0e; }
+ .aq-item.live { border-color:#22c55e; background:#061a0e; box-shadow: 0 0 0 2px #22c55e44; }
+ .aq-item.last-active { border-color:#f59e0b; background:#1a1000; box-shadow: 0 0 0 2px #f59e0b33; }
  .aq-meta { font-size:11px; color:#475569; margin-bottom:6px; }
  .aq-text { font-size:14px; color:#f1f5f9; margin-bottom:10px; line-height:1.5; }
  .aq-actions { display:flex; gap:8px; }
@@ -66,7 +67,8 @@
  .image-item .img-btn-hide:hover { background: #d97706; }
  .image-item .img-btn-delete { background: #dc2626; color: #fff; }
  .image-item .img-btn-delete:hover { background: #b91c1c; }
- .image-item.active { border-color: #22c55e; }
+ .image-item.active { border-color: #22c55e; box-shadow: 0 0 0 2px #22c55e44; }
+ .image-item.last-active { border-color: #f59e0b; box-shadow: 0 0 0 2px #f59e0b33; }
  .upload-area { border: 2px dashed #2a3a5e; border-radius: 10px; padding: 24px; text-align: center; margin-bottom: 14px; cursor: pointer; transition: all 0.2s; }
  .upload-area:hover { border-color: #4a90e2; background: rgba(74, 144, 226, 0.05); }
  .upload-area p { color: #888; font-size: 13px; margin-bottom: 8px; }
@@ -76,7 +78,8 @@
  /* Question list */
  .question-list { margin-top: 14px; }
  .question-item { background: #0a0a1a; border: 1px solid #2a3a5e; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
- .question-item.active { border-color: #22c55e; background: rgba(34, 197, 94, 0.05); }
+ .question-item.active { border-color: #22c55e; background: rgba(34, 197, 94, 0.05); box-shadow: 0 0 0 2px #22c55e44; }
+ .question-item.last-active { border-color: #f59e0b; background: rgba(245, 158, 11, 0.05); box-shadow: 0 0 0 2px #f59e0b33; }
  .question-item .q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
  .question-item .q-text { font-size: 14px; color: #f1f5f9; font-weight: 600; }
  .question-item .q-meta { font-size: 12px; color: #666; }
@@ -175,15 +178,39 @@
 <div class="panel">
  <h2>😊 Sentiment Sala</h2>
  <div class="btn-row">
-  <button id="btn-clear-sentiment" class="danger">Azzera Sentiment</button>
+  <button id="btn-clear-sentiment-old" class="danger">Azzera Sentiment</button>
  </div>
 </div>
 
 <!-- RESET ALL -->
 <div class="panel">
  <h2>⚠️ Reset Generale</h2>
- <div class="btn-row">
-  <button id="btn-reset-all-votes" class="danger">Azzera Tutti i Voti</button>
+ <div style="display:flex; flex-direction:column; gap:10px;">
+  <div>
+   <div style="font-size:12px;color:#888;margin-bottom:6px;">DOMANDE VOTING</div>
+   <div class="btn-row">
+    <button id="btn-reset-all-votes" class="danger">Azzera Tutti i Voti</button>
+    <button id="btn-delete-all-questions" class="danger">Cancella Tutte le Domande Voting</button>
+   </div>
+  </div>
+  <div>
+   <div style="font-size:12px;color:#888;margin-bottom:6px;">SLIDE / IMMAGINI</div>
+   <div class="btn-row">
+    <button id="btn-delete-all-images" class="danger">Cancella Tutte le Slide</button>
+   </div>
+  </div>
+  <div>
+   <div style="font-size:12px;color:#888;margin-bottom:6px;">DOMANDE DAL PUBBLICO</div>
+   <div class="btn-row">
+    <button id="btn-delete-all-audience-q" class="danger">Cancella Tutte le Domande Pubblico</button>
+   </div>
+  </div>
+  <div>
+   <div style="font-size:12px;color:#888;margin-bottom:6px;">SENTIMENT</div>
+   <div class="btn-row">
+    <button id="btn-clear-sentiment" class="danger">Azzera Sentiment</button>
+   </div>
+  </div>
  </div>
 </div>
 
@@ -246,6 +273,10 @@ onValue(ref(db, 'questions'), (snap) => {
 let _activeQuestionId = null;
 let _activeImageIdx = null;
 let _activeAudienceQId = null;
+// Ultimo attivo (per bordino arancione "ripristina")
+let _lastActiveQuestionId = null;
+let _lastActiveImageIdx = null;
+let _lastActiveAudienceQId = null;
 
 // Listener unificato che tiene aggiornato lo stato globale
 onValue(ref(db, 'active_question'), snap => {
@@ -253,6 +284,7 @@ onValue(ref(db, 'active_question'), snap => {
   const container = document.getElementById('active-q-container');
   const noActive = document.getElementById('no-active-q');
   if (_activeQuestionId) {
+    _lastActiveQuestionId = _activeQuestionId;
     activeQid = _activeQuestionId;
     get(ref(db, 'questions/' + activeQid)).then((qSnap) => {
       const q = qSnap.val();
@@ -272,7 +304,10 @@ onValue(ref(db, 'active_question'), snap => {
 });
 
 onValue(ref(db, 'active_image'), snap => {
-  _activeImageIdx = snap.val();
+  if (snap.val() !== null && snap.val() !== undefined) {
+    _lastActiveImageIdx = snap.val();
+  }
+  _activeImageIdx = snap.val() !== null && snap.val() !== undefined ? snap.val() : null;
   window.activeImageIndex = _activeImageIdx !== null ? _activeImageIdx : -1;
   updateAdminUI();
 });
@@ -289,14 +324,15 @@ function renderQuestionList() {
  
  list.innerHTML = allQuestions.map((q, idx) => {
   const isActive = q.id === activeQid;
+  const isLast = !isActive && q.id === _lastActiveQuestionId;
   // Disabilita Pubblica se c'è qualcosa di attivo (immagine o domanda pubblico)
   const somethingElseActive = (_activeImageIdx !== null && _activeImageIdx !== undefined && !isActive) ||
                               (_activeAudienceQId !== null && _activeAudienceQId !== undefined);
   return `
-   <div class="question-item${isActive ? ' active' : ''}">
+   <div class="question-item${isActive ? ' active' : isLast ? ' last-active' : ''}">
     <div class="q-header">
      <span class="q-text">${q.text}</span>
-     <span class="q-meta">Domanda ${q.index}</span>
+     <span class="q-meta">Domanda ${q.index}${isLast ? ' &nbsp;⟳ ultima attiva' : ''}</span>
     </div>
     <div class="q-meta">${q.options.join(' | ')}</div>
     <div class="q-actions">
@@ -427,12 +463,13 @@ function renderAudienceQuestions() {
     const dt = new Date(q.ts);
     const time = dt.toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' });
     const isLive = activeAudienceQ === id;
+    const isLast = !isLive && id === _lastActiveAudienceQId;
     // Disabilita Mostra se c'è qualcosa di attivo che non sia questa domanda
     const somethingElseActive = (_activeQuestionId !== null) ||
                                 (_activeImageIdx !== null && _activeImageIdx !== undefined) ||
                                 (activeAudienceQ !== null && activeAudienceQ !== id);
-    return `<div class="aq-item ${isLive ? 'live' : ''}" id="aq-${id}">
-      <div class="aq-meta">${time}${isLive ? ' &nbsp;🟢 LIVE' : ''}</div>
+    return `<div class="aq-item ${isLive ? 'live' : isLast ? 'last-active' : ''}" id="aq-${id}">
+      <div class="aq-meta">${time}${isLive ? ' &nbsp;🟢 LIVE' : isLast ? ' &nbsp;⟳ ultima attiva' : ''}</div>
       <div class="aq-text">${q.text}</div>
       <div class="aq-actions">
         <button class="${isLive ? 'warning' : 'success'}" onclick="toggleAudienceQ('${id}')">
@@ -450,6 +487,7 @@ onValue(ref(db, 'audience_questions'), snap => {
 });
 
 onValue(ref(db, 'active_audience_q'), snap => {
+  if (snap.val()) _lastActiveAudienceQId = snap.val();
   _activeAudienceQId = snap.val();
   activeAudienceQ = _activeAudienceQId;
   updateAdminUI();
@@ -500,6 +538,34 @@ document.getElementById('btn-clear-sentiment').addEventListener('click', async (
  toast('Sentiment e trend azzerati', '#f59e0b');
 });
 
+document.getElementById('btn-delete-all-questions').addEventListener('click', async () => {
+ if (!confirm('Cancellare TUTTE le domande voting? Questa azione è irreversibile.')) return;
+ await set(ref(db, 'active_question'), null);
+ await remove(ref(db, 'questions'));
+ await remove(ref(db, 'votes'));
+ _activeQuestionId = null; activeQid = null; _lastActiveQuestionId = null;
+ updateAdminUI();
+ toast('Tutte le domande voting cancellate', '#ef4444');
+});
+
+document.getElementById('btn-delete-all-images').addEventListener('click', async () => {
+ if (!confirm('Cancellare TUTTE le slide/immagini? Questa azione è irreversibile.')) return;
+ await set(ref(db, 'active_image'), null);
+ await remove(ref(db, 'images'));
+ _activeImageIdx = null; window.activeImageIndex = -1; _lastActiveImageIdx = null;
+ updateAdminUI();
+ toast('Tutte le slide cancellate', '#ef4444');
+});
+
+document.getElementById('btn-delete-all-audience-q').addEventListener('click', async () => {
+ if (!confirm('Cancellare TUTTE le domande dal pubblico? Questa azione è irreversibile.')) return;
+ await remove(ref(db, 'active_audience_q'));
+ await remove(ref(db, 'audience_questions'));
+ _activeAudienceQId = null; activeAudienceQ = null; _lastActiveAudienceQId = null;
+ updateAdminUI();
+ toast('Tutte le domande pubblico cancellate', '#ef4444');
+});
+
 // Toast
 function toast(msg, color='#22c55e') {
  const t = document.getElementById('toast');
@@ -525,15 +591,16 @@ function renderImageList() {
  list.innerHTML = '';
  window.imageList.forEach((img, idx) => {
   const isActive = idx === window.activeImageIndex;
+  const isLast = !isActive && idx === _lastActiveImageIdx;
   // Disabilita Mostra se c'è qualcosa di attivo che non sia questa immagine
   const somethingElseActive = (_activeQuestionId !== null) ||
                               (_activeAudienceQId !== null) ||
                               (window.activeImageIndex >= 0 && !isActive);
   const item = document.createElement('div');
-  item.className = 'image-item' + (isActive ? ' active' : '');
+  item.className = 'image-item' + (isActive ? ' active' : isLast ? ' last-active' : '');
   item.innerHTML = `
    <img src="${img.dataUrl}" alt="${img.name}">
-   <div class="img-name">${img.name}</div>
+   <div class="img-name">${img.name}${isLast ? ' ⟳' : ''}</div>
    <div class="img-actions">
     ${isActive ? 
       `<button class="img-btn img-btn-hide" onclick="hideImage()">Nascondi</button>` : 
