@@ -559,11 +559,12 @@ function updateIndexState() {
     imageSection.style.display = 'block';
     audienceQSection.style.display = 'none';
   } else {
-    // Nessuna domanda, nessuna immagine
-    waiting.style.display = 'flex';
+    // Nessuna domanda, nessuna immagine — mostra logo
+    waiting.style.display = 'none';
     voteSection.style.display = 'none';
-    imageSection.style.display = 'none';
+    imageSection.style.display = 'block';
     audienceQSection.style.display = 'none';
+    document.getElementById('display-image').src = 'https://marcoraimondi.github.io/townhall/logo.jpg';
   }
 }
 
