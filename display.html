@@ -65,7 +65,7 @@ html, body {
 }
 
 /* MAIN */
-.main { flex:1; display:flex; overflow:hidden; height:0; min-height:0; }
+.main { flex:1; display:flex; overflow:hidden; height:0; min-height:0; position:relative; }
 
 /* VOTE AREA */
 .vote-area {
@@ -195,17 +195,16 @@ html, body {
   will-change:transform;
 }
 
-/* IMAGE OVERLAY - copre topbar + main, sopra tutto */
+/* IMAGE OVERLAY - copre solo la vote-area (sinistra), lascia il sentiment */
 #image-area {
-  position:fixed;
-  top:58px; /* altezza topbar */
-  left:0; right:0;
-  bottom:56px; /* altezza ticker */
+  position:absolute;
+  top:0; left:0; bottom:0;
+  right:340px; /* larghezza sentiment-panel */
   background:#04080f;
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:100;
+  z-index:10;
 }
 #image-area img {
   max-width:100%;
