@@ -47,14 +47,18 @@
  .timer-row input { width:100px; margin-bottom:0; }
  
  /* Image upload section */
- .image-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; margin-top: 14px; }
+ .image-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 14px; }
  .image-item { position: relative; background: #0a0a1a; border-radius: 8px; overflow: hidden; border: 1px solid #2a3a5e; }
  .image-item img { width: 100%; height: 80px; object-fit: cover; display: block; }
  .image-item .img-name { font-size: 11px; color: #888; padding: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
- .image-item .img-delete { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; background: rgba(220, 38, 38, 0.9); border: none; color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
- .image-item .img-delete:hover { background: #dc2626; }
- .image-item .img-active { position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 50%; background: rgba(34, 197, 94, 0.9); border: none; color: #fff; font-size: 14px; cursor: pointer; display: none; align-items: center; justify-content: center; }
- .image-item.active .img-active { display: flex; }
+ .image-item .img-actions { display: flex; gap: 4px; padding: 6px; }
+ .image-item .img-btn { flex: 1; font-size: 10px; padding: 4px 6px; border-radius: 4px; border: none; cursor: pointer; font-weight: 600; }
+ .image-item .img-btn-show { background: #22c55e; color: #fff; }
+ .image-item .img-btn-show:hover { background: #16a34a; }
+ .image-item .img-btn-hide { background: #f59e0b; color: #000; }
+ .image-item .img-btn-hide:hover { background: #d97706; }
+ .image-item .img-btn-delete { background: #dc2626; color: #fff; }
+ .image-item .img-btn-delete:hover { background: #b91c1c; }
  .image-item.active { border-color: #22c55e; }
  .upload-area { border: 2px dashed #2a3a5e; border-radius: 10px; padding: 24px; text-align: center; margin-bottom: 14px; cursor: pointer; transition: all 0.2s; }
  .upload-area:hover { border-color: #4a90e2; background: rgba(74, 144, 226, 0.05); }
@@ -146,8 +150,8 @@
  </div>
  
  <div class="btn-row" style="margin-bottom:14px;">
-  <button id="btn-show-image" class="success" onclick="showActiveImage()">Mostra Immagine</button>
-  <button id="btn-hide-image" class="secondary" onclick="hideImage()">Nascondi Immagine</button>
+  <button id="btn-show-first" class="success" onclick="showFirstImage()">Mostra Prima Immagine</button>
+  <button id="btn-hide-all" class="secondary" onclick="hideAllImages()">Nascondi Tutte</button>
  </div>
  
  <div class="image-list" id="image-list"></div>
@@ -382,13 +386,19 @@ function renderImageList() {
  const list = document.getElementById('image-list');
  list.innerHTML = '';
  window.imageList.forEach((img, idx) => {
+  const isActive = idx === window.activeImageIndex;
   const item = document.createElement('div');
-  item.className = 'image-item' + (idx === window.activeImageIndex ? ' active' : '');
+  item.className = 'image-item' + (isActive ? ' active' : '');
   item.innerHTML = `
    <img src="${img.dataUrl}" alt="${img.name}">
    <div class="img-name">${img.name}</div>
-   <button class="img-active" onclick="setActiveImage(${idx})">✓</button>
-   <button class="img-delete" onclick="deleteImage('${img.id}')">✕</button>
+   <div class="img-actions">
+    ${isActive ? 
+      `<button class="img-btn img-btn-hide" onclick="hideImage()">Nascondi</button>` : 
+      `<button class="img-btn img-btn-show" onclick="showImage(${idx})">Mostra</button>`
+    }
+    <button class="img-btn img-btn-delete" onclick="deleteImage('${img.id}')">Elimina</button>
+   </div>
   `;
   list.appendChild(item);
  });
@@ -474,30 +484,32 @@ window.deleteImage = async (id) => {
  toast('Immagine eliminata', '#f59e0b');
 };
 
-window.setActiveImage = async (idx) => {
+window.showImage = async (idx) => {
+ // Mostra immagine e sovrascrivi domanda attiva
+ await set(ref(db, 'active_question'), null); // Ferma eventuale domanda
+ await set(ref(db, 'active_image'), idx);
  window.activeImageIndex = idx;
- await set(ref(db, 'active_image'), idx >= 0 ? idx : null);
  renderImageList();
- toast('Immagine selezionata', '#22c55e');
-};
-
-window.showActiveImage = async () => {
- if (window.imageList.length === 0) {
-  toast('Nessuna immagine caricata', '#ef4444');
-  return;
- }
- if (window.activeImageIndex < 0) {
-  window.activeImageIndex = 0;
- }
- await set(ref(db, 'active_image'), window.activeImageIndex);
  toast('Immagine proiettata', '#22c55e');
 };
 
 window.hideImage = async () => {
- window.activeImageIndex = -1;
  await set(ref(db, 'active_image'), null);
+ window.activeImageIndex = -1;
  renderImageList();
  toast('Immagine nascosta', '#f59e0b');
+};
+
+window.showFirstImage = async () => {
+ if (window.imageList.length === 0) {
+  toast('Nessuna immagine caricata', '#ef4444');
+  return;
+ }
+ await showImage(0);
+};
+
+window.hideAllImages = async () => {
+ await hideImage();
 };
 </script>
 </body>
