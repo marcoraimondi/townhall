@@ -269,9 +269,12 @@ let _activeAudienceQId = null;
 let _lastActiveQuestionId = null;
 let _lastActiveImageIdx = null;
 let _lastActiveAudienceQId = null;
+// Flag per ignorare i listener Firebase durante operazioni locali
+let _suppressListeners = false;
 
 // Listener unificato che tiene aggiornato lo stato globale
 onValue(ref(db, 'active_question'), snap => {
+  if (_suppressListeners) return;
   _activeQuestionId = snap.val() ? (snap.val().qid || snap.val()) : null;
   const container = document.getElementById('active-q-container');
   const noActive = document.getElementById('no-active-q');
@@ -296,11 +299,20 @@ onValue(ref(db, 'active_question'), snap => {
 });
 
 onValue(ref(db, 'active_image'), snap => {
+  if (_suppressListeners) return;
   if (snap.val() !== null && snap.val() !== undefined) {
     _lastActiveImageIdx = snap.val();
   }
   _activeImageIdx = snap.val() !== null && snap.val() !== undefined ? snap.val() : null;
   window.activeImageIndex = _activeImageIdx !== null ? _activeImageIdx : -1;
+  updateAdminUI();
+});
+
+onValue(ref(db, 'active_audience_q'), snap => {
+  if (_suppressListeners) return;
+  if (snap.val()) _lastActiveAudienceQId = snap.val();
+  _activeAudienceQId = snap.val();
+  activeAudienceQ = _activeAudienceQId;
   updateAdminUI();
 });
 
@@ -340,15 +352,26 @@ function renderQuestionList() {
 window.publishQuestion = async (qid) => {
  const q = allQuestions.find(q => q.id === qid);
  if (!q) return;
- // Aggiorna subito lo stato locale
+ // Aggiorna stato locale e sopprimi i listener per evitare conflitti
+ _suppressListeners = true;
+ if (_activeQuestionId) _lastActiveQuestionId = _activeQuestionId;
+ if (_activeAudienceQId) _lastActiveAudienceQId = _activeAudienceQId;
+ if (_activeImageIdx !== null) _lastActiveImageIdx = _activeImageIdx;
  _activeImageIdx = null;
  window.activeImageIndex = -1;
  _activeAudienceQId = null;
  activeAudienceQ = null;
  _activeQuestionId = qid;
  activeQid = qid;
+ // Aggiorna pannello domanda attiva
+ const container = document.getElementById('active-q-container');
+ const noActive = document.getElementById('no-active-q');
+ document.getElementById('active-q-text').textContent = q.text;
+ document.getElementById('active-q-options').textContent = q.options.map((o,i) => String.fromCharCode(65+i) + ') ' + o).join('  •  ');
+ container.style.display = 'block';
+ noActive.style.display = 'none';
  updateAdminUI();
- // Poi sincronizza Firebase
+ // Sincronizza Firebase
  await set(ref(db, 'active_image'), null);
  await remove(ref(db, 'active_audience_q'));
  const timer = q.durationSeconds || 40;
@@ -358,15 +381,23 @@ window.publishQuestion = async (qid) => {
   startsAt: Date.now(),
   durationSeconds: timer
  });
- toast('Domanda pubblicata!', '#22c55e');
+ _suppressListeners = false;
+ toast('Domanda mostrata!', '#22c55e');
 };
 
 window.stopQuestion = async () => {
+ _suppressListeners = true;
+ if (_activeQuestionId) _lastActiveQuestionId = _activeQuestionId;
  _activeQuestionId = null;
  activeQid = null;
+ const container = document.getElementById('active-q-container');
+ const noActive = document.getElementById('no-active-q');
+ container.style.display = 'none';
+ noActive.style.display = 'block';
  updateAdminUI();
  await set(ref(db, 'active_question'), null);
- toast('Domanda fermata', '#f59e0b');
+ _suppressListeners = false;
+ toast('Domanda nascosta', '#f59e0b');
 };
 
 window.resetVotes = async (qid) => {
@@ -474,36 +505,38 @@ onValue(ref(db, 'audience_questions'), snap => {
   renderAudienceQuestions();
 });
 
-onValue(ref(db, 'active_audience_q'), snap => {
-  if (snap.val()) _lastActiveAudienceQId = snap.val();
-  _activeAudienceQId = snap.val();
-  activeAudienceQ = _activeAudienceQId;
-  updateAdminUI();
-});
-
 window.toggleAudienceQ = async function(id) {
   const isLive = activeAudienceQ === id;
+  _suppressListeners = true;
   if (isLive) {
+    if (_activeAudienceQId) _lastActiveAudienceQId = _activeAudienceQId;
     _activeAudienceQId = null;
     activeAudienceQ = null;
     updateAdminUI();
     await remove(ref(db, 'active_audience_q'));
     toast('Domanda nascosta', '#f59e0b');
   } else {
-    // Aggiorna subito lo stato locale
+    if (_activeQuestionId) _lastActiveQuestionId = _activeQuestionId;
+    if (_activeAudienceQId) _lastActiveAudienceQId = _activeAudienceQId;
+    if (_activeImageIdx !== null) _lastActiveImageIdx = _activeImageIdx;
     _activeQuestionId = null;
     activeQid = null;
     _activeImageIdx = null;
     window.activeImageIndex = -1;
     _activeAudienceQId = id;
     activeAudienceQ = id;
+    // aggiorna pannello domanda voting
+    const container = document.getElementById('active-q-container');
+    const noActive = document.getElementById('no-active-q');
+    container.style.display = 'none';
+    noActive.style.display = 'block';
     updateAdminUI();
-    // Poi sincronizza Firebase
     await set(ref(db, 'active_question'), null);
     await set(ref(db, 'active_image'), null);
     await set(ref(db, 'active_audience_q'), id);
     toast('Domanda proiettata!', '#22c55e');
   }
+  _suppressListeners = false;
 };
 
 window.deleteAudienceQ = async function(id) {
@@ -682,26 +715,36 @@ window.deleteImage = async (id) => {
 };
 
 window.showImage = async (idx) => {
- // Aggiorna subito lo stato locale per un re-render coerente
+ _suppressListeners = true;
+ if (_activeQuestionId) _lastActiveQuestionId = _activeQuestionId;
+ if (_activeAudienceQId) _lastActiveAudienceQId = _activeAudienceQId;
+ if (_activeImageIdx !== null) _lastActiveImageIdx = _activeImageIdx;
  _activeQuestionId = null;
  _activeAudienceQId = null;
  activeAudienceQ = null;
  activeQid = null;
  _activeImageIdx = idx;
  window.activeImageIndex = idx;
+ const container = document.getElementById('active-q-container');
+ const noActive = document.getElementById('no-active-q');
+ container.style.display = 'none';
+ noActive.style.display = 'block';
  updateAdminUI();
- // Poi sincronizza Firebase
  await set(ref(db, 'active_question'), null);
  await remove(ref(db, 'active_audience_q'));
  await set(ref(db, 'active_image'), idx);
+ _suppressListeners = false;
  toast('Immagine proiettata', '#22c55e');
 };
 
 window.hideImage = async () => {
+ _suppressListeners = true;
+ if (_activeImageIdx !== null) _lastActiveImageIdx = _activeImageIdx;
  _activeImageIdx = null;
  window.activeImageIndex = -1;
  updateAdminUI();
  await set(ref(db, 'active_image'), null);
+ _suppressListeners = false;
  toast('Immagine nascosta', '#f59e0b');
 };
 
