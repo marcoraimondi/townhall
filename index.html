@@ -450,7 +450,7 @@ sendHeartbeat();
 let heartbeatInterval;
 function scheduleHeartbeat() {
   if (heartbeatInterval) clearInterval(heartbeatInterval);
-  const interval = document.visibilityState === 'visible' ? 5000 : 15000;
+  const interval = document.visibilityState === 'visible' ? 5000 : 20000;
   heartbeatInterval = setInterval(sendHeartbeat, interval);
   console.log('[HEARTBEAT] Scheduled every', interval, 'ms (visible:', document.visibilityState === 'visible', ')');
 }
@@ -471,7 +471,7 @@ function cleanupStaleUsers() {
   get(ref(db, 'connected_users')).then((snap) => {
     const users = snap.val() || {};
     const now = Date.now();
-    const staleThreshold = 60000; // 60 secondi - pagina in standby resta "viva"
+    const staleThreshold = 180000; // 3 minuti
     
     const updates = {};
     let staleCount = 0;
@@ -503,7 +503,7 @@ function updateConnectedCount() {
     .then((snap) => {
       const users = snap.val() || {};
       const now = Date.now();
-      const freshThreshold = 60000; // 60 secondi
+      const freshThreshold = 180000; // 3 minuti
       
       // Conta solo utenti "fresh" (timestamp recente)
       let freshCount = 0;
