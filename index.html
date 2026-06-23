@@ -461,6 +461,8 @@ console.log('[INIT] Heartbeat + cleanup started');
 onValue(ref(db, 'active_question'), async (snap) => {
   const data = snap.val();
   
+  console.log('[ACTIVE_QUESTION] Data:', JSON.stringify(data));
+  
   if (timerInterval) {
     clearInterval(timerInterval);
     timerInterval = null;
@@ -468,25 +470,35 @@ onValue(ref(db, 'active_question'), async (snap) => {
   
   if (!data) {
     // No active question - check for active image
+    console.log('[ACTIVE_QUESTION] No question, checking for image...');
     const imgSnap = await get(ref(db, 'active_image'));
     const activeImgIdx = imgSnap.val();
     
+    console.log('[ACTIVE_IMAGE] Index:', activeImgIdx);
+    
     if (activeImgIdx !== null && activeImgIdx !== undefined) {
       // Show image
+      console.log('[ACTIVE_IMAGE] Loading images...');
       const imagesSnap = await get(ref(db, 'images'));
       const images = imagesSnap.val() || {};
       const imageList = Object.values(images).sort((a,b) => a.order - b.order);
       
+      console.log('[ACTIVE_IMAGE] Total images:', imageList.length, 'Active index:', activeImgIdx);
+      
       if (imageList[activeImgIdx]) {
+        console.log('[ACTIVE_IMAGE] Showing:', imageList[activeImgIdx].name);
         document.getElementById('waiting').style.display = 'none';
         document.getElementById('vote-section').style.display = 'none';
         document.getElementById('image-section').style.display = 'block';
         document.getElementById('display-image').src = imageList[activeImgIdx].dataUrl;
         return;
+      } else {
+        console.log('[ACTIVE_IMAGE] No image at index', activeImgIdx);
       }
     }
     
     // No question, no image - show waiting
+    console.log('[ACTIVE_QUESTION] Showing waiting screen');
     document.getElementById('waiting').style.display = 'flex';
     document.getElementById('vote-section').style.display = 'none';
     document.getElementById('image-section').style.display = 'none';
