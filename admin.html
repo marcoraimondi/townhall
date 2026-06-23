@@ -6,7 +6,7 @@
 <title>Admin – Townhall S&T</title>
 <style>
  * { box-sizing: border-box; margin: 0; padding: 0; }
- body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0a1a; color: #fff; padding: 24px; max-width: 800px; margin: 0 auto; }
+ body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0a1a; color: #fff; padding: 24px; max-width: 900px; margin: 0 auto; }
  h1 { font-size: 22px; margin-bottom: 4px; color: #4a90e2; }
  .subtitle { font-size: 13px; color: #666; margin-bottom: 24px; }
  .status-bar { display:flex; align-items:center; gap:10px; background:#111a2e; border:1px solid #1e3a6e; border-radius:10px; padding:10px 16px; margin-bottom:20px; font-size:13px; }
@@ -35,6 +35,7 @@
  button.secondary { background: #334155; }
  button.danger { background: #dc2626; }
  button.success { background: #22c55e; }
+ button.warning { background: #f59e0b; }
  .toast {
  position: fixed; bottom: 24px; right: 24px; background: #111a2e;
  border: 1px solid #2a3a5e; border-radius: 10px; padding: 12px 20px;
@@ -60,6 +61,17 @@
  .upload-area p { color: #888; font-size: 13px; margin-bottom: 8px; }
  .upload-area input[type="file"] { display: none; }
  .btn-upload { background: #4a90e2; display: inline-block; padding: 8px 16px; border-radius: 6px; font-size: 13px; }
+ 
+ /* Question list */
+ .question-list { margin-top: 14px; }
+ .question-item { background: #0a0a1a; border: 1px solid #2a3a5e; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+ .question-item.active { border-color: #22c55e; background: rgba(34, 197, 94, 0.05); }
+ .question-item .q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+ .question-item .q-text { font-size: 14px; color: #f1f5f9; font-weight: 600; }
+ .question-item .q-meta { font-size: 12px; color: #666; }
+ .question-item .q-actions { display: flex; gap: 8px; margin-top: 8px; }
+ .question-item .q-actions button { padding: 6px 12px; font-size: 12px; }
+ .empty-state { text-align: center; color: #666; padding: 20px; font-size: 14px; }
 </style>
 </head>
 <body>
@@ -96,6 +108,14 @@
  </div>
 </div>
 
+<!-- QUESTION LIST -->
+<div class="panel">
+ <h2>📋 Tutte le Domande</h2>
+ <div class="question-list" id="question-list">
+  <div class="empty-state">Caricamento...</div>
+ </div>
+</div>
+
 <!-- ACTIVE QUESTION -->
 <div class="panel">
  <h2>▶️ Domanda Attiva</h2>
@@ -119,6 +139,10 @@
   <p>📁 Trascina qui le immagini o clicca per selezionare</p>
   <span class="btn-upload">Scegli file</span>
   <input type="file" id="img-upload" accept="image/*" multiple onchange="handleImageUpload(event)">
+ </div>
+ 
+ <div id="upload-progress" style="display:none; color:#888; font-size:13px; margin-bottom:10px;">
+  Caricamento in corso... <span id="upload-count">0</span>
  </div>
  
  <div class="btn-row" style="margin-bottom:14px;">
@@ -149,7 +173,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, push, onValue, remove, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, push, onValue, remove, get, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
  apiKey: "AIzaSyAKUJyfsvSvYm-Alvv8xjF39mf9fH_GR40",
@@ -164,6 +188,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 let activeQid = null;
+let allQuestions = [];
 
 // Connection status
 onValue(ref(db, '.info/connected'), (snap) => {
@@ -175,6 +200,13 @@ onValue(ref(db, '.info/connected'), (snap) => {
   statusEl.textContent = 'Disconnesso';
   statusEl.style.color = '#ef4444';
  }
+});
+
+// Load all questions
+onValue(ref(db, 'questions'), (snap) => {
+ const data = snap.val() || {};
+ allQuestions = Object.entries(data).map(([id, q]) => ({ id, ...q })).sort((a,b) => a.index - b.index);
+ renderQuestionList();
 });
 
 // Listen for active question
@@ -192,14 +224,78 @@ onValue(ref(db, 'active_question'), (snap) => {
     document.getElementById('active-q-options').textContent = q.options.map((o,i) => String.fromCharCode(65+i) + ') ' + o).join('  •  ');
     container.style.display = 'block';
     noActive.style.display = 'none';
+    renderQuestionList(); // Update active highlight
    }
   });
  } else {
   activeQid = null;
   container.style.display = 'none';
   noActive.style.display = 'block';
+  renderQuestionList();
  }
 });
+
+function renderQuestionList() {
+ const list = document.getElementById('question-list');
+ if (allQuestions.length === 0) {
+  list.innerHTML = '<div class="empty-state">Nessuna domanda salvata</div>';
+  return;
+ }
+ 
+ list.innerHTML = allQuestions.map((q, idx) => {
+  const isActive = q.id === activeQid;
+  return `
+   <div class="question-item${isActive ? ' active' : ''}">
+    <div class="q-header">
+     <span class="q-text">${q.text}</span>
+     <span class="q-meta">Domanda ${q.index}</span>
+    </div>
+    <div class="q-meta">${q.options.join(' | ')}</div>
+    <div class="q-actions">
+     ${isActive ? 
+       `<button class="danger" onclick="stopQuestion()">Ferma</button>` : 
+       `<button class="success" onclick="publishQuestion('${q.id}')">Pubblica</button>`
+     }
+     <button class="secondary" onclick="resetVotes('${q.id}')">Azzera Voti</button>
+     <button class="danger" onclick="deleteQuestion('${q.id}')">Elimina</button>
+    </div>
+   </div>
+  `;
+ }).join('');
+}
+
+window.publishQuestion = async (qid) => {
+ const q = allQuestions.find(q => q.id === qid);
+ if (!q) return;
+ 
+ const timer = 40; // default timer
+ await set(ref(db, 'active_question'), {
+  qid: qid,
+  startsAt: Date.now(),
+  durationSeconds: timer
+ });
+ toast('Domanda pubblicata!', '#22c55e');
+};
+
+window.stopQuestion = async () => {
+ await set(ref(db, 'active_question'), null);
+ toast('Domanda fermata', '#f59e0b');
+};
+
+window.resetVotes = async (qid) => {
+ if (!confirm('Azzerare i voti di questa domanda?')) return;
+ await remove(ref(db, 'votes/' + qid));
+ toast('Voti azzerati', '#f59e0b');
+};
+
+window.deleteQuestion = async (qid) => {
+ if (!confirm('Eliminare permanentemente questa domanda?')) return;
+ await remove(ref(db, 'questions/' + qid));
+ if (activeQid === qid) {
+  await stopQuestion();
+ }
+ toast('Domanda eliminata', '#ef4444');
+};
 
 // Add question
 document.getElementById('btn-add-q').addEventListener('click', async () => {
@@ -216,21 +312,16 @@ document.getElementById('btn-add-q').addEventListener('click', async () => {
  }
  
  const qRef = push(ref(db, 'questions'));
+ const nextIndex = allQuestions.length + 1;
  const qData = {
   text,
   options: [optA, optB, optC, optD],
-  index: (await get(ref(db, 'questions')).then(s => Object.keys(s.val() || {}).length)) + 1,
+  index: nextIndex,
   createdAt: Date.now()
  };
  
  await set(qRef, qData);
- await set(ref(db, 'active_question'), {
-  qid: qRef.key,
-  startsAt: Date.now(),
-  durationSeconds: timer > 0 ? timer : null
- });
- 
- toast('Domanda pubblicata!', '#22c55e');
+ toast('Domanda aggiunta!', '#22c55e');
  document.getElementById('btn-clear-form').click();
 });
 
@@ -307,30 +398,43 @@ window.handleImageUpload = async (event) => {
  const files = event.target.files;
  if (!files.length) return;
  
- const uploadPromises = [];
+ document.getElementById('upload-progress').style.display = 'block';
+ let uploaded = 0;
+ 
  for (let file of files) {
   const reader = new FileReader();
   const promise = new Promise((resolve, reject) => {
    reader.onload = async (e) => {
     const dataUrl = e.target.result;
+    
+    // Check size (max 2MB per image)
+    const sizeMB = dataUrl.length / (1024 * 1024);
+    if (sizeMB > 2) {
+     toast(`⚠️ ${file.name} troppo grande (${sizeMB.toFixed(1)}MB). Max 2MB.`, '#f59e0b');
+     resolve();
+     return;
+    }
+    
     const imgRef = push(ref(db, 'images'));
     const imgData = {
      name: file.name,
      dataUrl: dataUrl,
-     order: window.imageList.length + uploadPromises.length,
+     order: window.imageList.length + uploaded,
      uploadedAt: Date.now()
     };
     await set(imgRef, imgData);
+    uploaded++;
+    document.getElementById('upload-count').textContent = `${uploaded}/${files.length}`;
     resolve();
    };
    reader.onerror = reject;
   });
   reader.readAsDataURL(file);
-  uploadPromises.push(promise);
+  await promise; // Wait for each file sequentially
  }
  
- await Promise.all(uploadPromises);
- toast(`${files.length} immagine/i caricata/e`, '#22c55e');
+ document.getElementById('upload-progress').style.display = 'none';
+ toast(`${uploaded} immagine/i caricata/e`, '#22c55e');
  event.target.value = '';
 };
 
