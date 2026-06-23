@@ -297,7 +297,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, get, onDisconnect, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, get, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAKUJyfsvSvYm-Alvv8xjF39mf9fH_GR40",
@@ -312,6 +312,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const userId = 'user_' + Math.random().toString(36).substr(2, 9);
+const sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
 const COLORS = ['A','B','C','D'];
 const LETTERS = ['A','B','C','D'];
 
@@ -319,76 +320,91 @@ let hasVoted = false;
 let activeQuestion = null;
 let timerInterval = null;
 
-// Generate unique session ID for presence tracking
-const sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
 const userPresenceRef = ref(db, 'connected_users/' + sessionId);
-const connectedRef = ref(db, '.info/connected');
 
-console.log('[PRESENCE] Session ID:', sessionId);
+console.log('[INIT] User:', userId, 'Session:', sessionId);
 
-// Presence system - simplified and robust
-let isPresent = false;
+// HEARTBEAT approach - più affidabile di onDisconnect su Safari mobile
+// Ogni client aggiorna il proprio timestamp ogni 3 secondi
+// I client con timestamp > 10 secondi fa vengono considerati "disconnessi"
 
-function setupPresence() {
-  onValue(connectedRef, (snap) => {
-    const connected = snap.val();
-    console.log('[FIREBASE] Connection status:', connected);
-    
-    if (connected === true) {
-      // We're connected - set presence immediately
-      set(userPresenceRef, {
-        connected: true,
-        ts: Date.now()
-      }).then(() => {
-        isPresent = true;
-        console.log('[PRESENCE] Set successfully');
-        
-        // Setup onDisconnect to remove on leave
-        onDisconnect(userPresenceRef).remove().then(() => {
-          console.log('[PRESENCE] onDisconnect registered');
-        }).catch(err => {
-          console.error('[PRESENCE] onDisconnect error:', err);
-        });
-      }).catch(err => {
-        console.error('[PRESENCE] Set error:', err);
-      });
-    } else {
-      isPresent = false;
-      console.log('[FIREBASE] Disconnected');
-    }
+function sendHeartbeat() {
+  const now = Date.now();
+  set(userPresenceRef, {
+    ts: now,
+    userAgent: navigator.userAgent.substring(0, 50)
+  }).then(() => {
+    console.log('[HEARTBEAT] Sent @', new Date(now).toISOString());
+  }).catch((err) => {
+    console.error('[HEARTBEAT] Error:', err);
   });
 }
 
-// Count users - simple polling approach
-let pollCount = 0;
-function pollConnectedUsers() {
-  pollCount++;
+// Invia heartbeat immediato e poi ogni 3 secondi
+sendHeartbeat();
+const heartbeatInterval = setInterval(sendHeartbeat, 3000);
+
+// Cleanup: rimuovi entry vecchie (> 10 secondi)
+function cleanupStaleUsers() {
+  get(ref(db, 'connected_users')).then((snap) => {
+    const users = snap.val() || {};
+    const now = Date.now();
+    const staleThreshold = 10000; // 10 secondi
+    
+    const updates = {};
+    let staleCount = 0;
+    
+    Object.keys(users).forEach((sid) => {
+      const user = users[sid];
+      const age = now - (user.ts || 0);
+      if (age > staleThreshold) {
+        updates[sid] = null; // null = remove in Firebase
+        staleCount++;
+      }
+    });
+    
+    if (staleCount > 0) {
+      console.log('[CLEANUP] Removing', staleCount, 'stale users');
+      update(ref(db, 'connected_users'), updates);
+    }
+  }).catch((err) => {
+    console.error('[CLEANUP] Error:', err);
+  });
+}
+
+// Esegui cleanup ogni 2 secondi
+setInterval(cleanupStaleUsers, 2000);
+
+// Conta utenti connessi (solo quelli con timestamp < 10 secondi)
+function updateConnectedCount() {
   get(ref(db, 'connected_users'))
     .then((snap) => {
       const users = snap.val() || {};
-      const count = Object.keys(users).length;
-      document.getElementById('live-count').textContent = count;
-      console.log(`[POLL #${pollCount}] Connected: ${count}`, users);
+      const now = Date.now();
+      const freshThreshold = 10000; // 10 secondi
+      
+      // Conta solo utenti "fresh" (timestamp recente)
+      let freshCount = 0;
+      Object.keys(users).forEach((sid) => {
+        const user = users[sid];
+        if (now - (user.ts || 0) < freshThreshold) {
+          freshCount++;
+        }
+      });
+      
+      document.getElementById('live-count').textContent = freshCount;
+      console.log('[COUNT] Connected:', freshCount, '(total entries:', Object.keys(users).length, ')');
     })
     .catch((err) => {
-      console.error('[POLL] Error:', err);
+      console.error('[COUNT] Error:', err);
     });
 }
 
-// Start presence and polling
-setupPresence();
-pollConnectedUsers(); // Initial poll
-setInterval(pollConnectedUsers, 1500); // Poll every 1.5 seconds
+// Aggiorna conteggio immediatamente e poi ogni secondo
+updateConnectedCount();
+setInterval(updateConnectedCount, 1000);
 
-// Also add a listener for real-time updates (backup)
-onValue(ref(db, 'connected_users'), (snap) => {
-  const users = snap.val() || {};
-  const count = Object.keys(users).length;
-  document.getElementById('live-count').textContent = count;
-  console.log('[LISTENER] Live count:', count, users);
-});
-
-console.log('[INIT] Presence + polling started');
+console.log('[INIT] Heartbeat + cleanup started');
 
 // Listen for active question
 onValue(ref(db, 'active_question'), async (snap) => {
