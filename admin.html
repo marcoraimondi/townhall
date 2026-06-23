@@ -43,6 +43,13 @@
  transform: translateY(100px); opacity: 0; transition: all 0.3s;
  }
  .toast.show { transform: translateY(0); opacity: 1; }
+
+ /* Audience questions */
+ .aq-item { background:#0a0f1e; border:1px solid #1e3060; border-radius:10px; padding:12px 14px; margin-bottom:10px; }
+ .aq-item.live { border-color:#22c55e; background:#061a0e; }
+ .aq-meta { font-size:11px; color:#475569; margin-bottom:6px; }
+ .aq-text { font-size:14px; color:#f1f5f9; margin-bottom:10px; line-height:1.5; }
+ .aq-actions { display:flex; gap:8px; }
  .timer-row { display:flex; gap:10px; align-items:center; }
  .timer-row input { width:100px; margin-bottom:0; }
  
@@ -155,6 +162,13 @@
  </div>
  
  <div class="image-list" id="image-list"></div>
+</div>
+
+<!-- DOMANDE DAL PUBBLICO -->
+<div class="panel">
+ <h2>❓ Domande dal Pubblico</h2>
+ <div style="color:#888;font-size:13px;margin-bottom:14px;">Le domande inviate dagli utenti. Clicca Mostra per proiettarla sul display.</div>
+ <div id="audience-q-list"><div style="color:#666;font-size:13px;">Nessuna domanda ricevuta</div></div>
 </div>
 
 <!-- SENTIMENT -->
@@ -349,6 +363,59 @@ document.getElementById('btn-reset-votes').addEventListener('click', async () =>
  await remove(ref(db, 'votes/' + activeQid));
  toast('Voti azzerati', '#f59e0b');
 });
+
+// ═══════════════════════════════════════
+// DOMANDE DAL PUBBLICO
+// ═══════════════════════════════════════
+let activeAudienceQ = null;
+
+onValue(ref(db, 'audience_questions'), snap => {
+  const data = snap.val() || {};
+  const list = document.getElementById('audience-q-list');
+  const entries = Object.entries(data).sort((a,b) => a[1].ts - b[1].ts);
+
+  if (!entries.length) {
+    list.innerHTML = '<div style="color:#666;font-size:13px;">Nessuna domanda ricevuta</div>';
+    return;
+  }
+
+  list.innerHTML = entries.map(([id, q]) => {
+    const dt = new Date(q.ts);
+    const time = dt.toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' });
+    const isLive = activeAudienceQ === id;
+    return `<div class="aq-item ${isLive ? 'live' : ''}" id="aq-${id}">
+      <div class="aq-meta">${time}${isLive ? ' &nbsp;🟢 LIVE' : ''}</div>
+      <div class="aq-text">${q.text}</div>
+      <div class="aq-actions">
+        <button class="${isLive ? 'warning' : 'success'}" onclick="toggleAudienceQ('${id}', ${isLive})">
+          ${isLive ? 'Nascondi' : 'Mostra'}
+        </button>
+        <button class="danger" onclick="deleteAudienceQ('${id}')">Cancella</button>
+      </div>
+    </div>`;
+  }).join('');
+});
+
+onValue(ref(db, 'active_audience_q'), snap => {
+  activeAudienceQ = snap.val();
+});
+
+window.toggleAudienceQ = async function(id, isLive) {
+  if (isLive) {
+    await remove(ref(db, 'active_audience_q'));
+    toast('Domanda nascosta', '#f59e0b');
+  } else {
+    await set(ref(db, 'active_audience_q'), id);
+    toast('Domanda proiettata!', '#22c55e');
+  }
+};
+
+window.deleteAudienceQ = async function(id) {
+  if (!confirm('Cancellare questa domanda?')) return;
+  if (activeAudienceQ === id) await remove(ref(db, 'active_audience_q'));
+  await remove(ref(db, 'audience_questions/' + id));
+  toast('Domanda cancellata', '#ef4444');
+};
 
 document.getElementById('btn-reset-all-votes').addEventListener('click', async () => {
  if (!confirm('Azzerare i voti di TUTTE le domande?')) return;
