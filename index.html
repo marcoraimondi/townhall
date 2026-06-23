@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Townhall Strategy & Transformation</title>
+<title>TOWNHALL S&T</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -259,7 +259,7 @@
   <span class="live-count" id="live-count">0</span>
 </div>
 
-<div class="logo">Townhall Strategy & Transformation</div>
+<div class="logo">TOWNHALL S&T</div>
 
 <div id="waiting">
   <div class="pulse"></div>
@@ -297,7 +297,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, get, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, get, onDisconnect, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAKUJyfsvSvYm-Alvv8xjF39mf9fH_GR40",
@@ -318,68 +318,77 @@ const LETTERS = ['A','B','C','D'];
 let hasVoted = false;
 let activeQuestion = null;
 let timerInterval = null;
-let connectedUsers = 0;
 
 // Generate unique session ID for presence tracking
 const sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
-
-// Presence tracking - improved version
 const userPresenceRef = ref(db, 'connected_users/' + sessionId);
 const connectedRef = ref(db, '.info/connected');
 
-let isConnected = false;
+console.log('[PRESENCE] Session ID:', sessionId);
 
-onValue(connectedRef, (snap) => {
-  const connected = snap.val();
-  console.log('Firebase connection status:', connected);
-  
-  if (connected === true && !isConnected) {
-    // We just connected
-    isConnected = true;
+// Presence system - simplified and robust
+let isPresent = false;
+
+function setupPresence() {
+  onValue(connectedRef, (snap) => {
+    const connected = snap.val();
+    console.log('[FIREBASE] Connection status:', connected);
     
-    // Set presence
-    set(userPresenceRef, true).then(() => {
-      console.log('Presence set successfully');
-      
-      // Setup onDisconnect AFTER presence is set
-      onDisconnect(userPresenceRef).remove().then(() => {
-        console.log('onDisconnect handler registered');
+    if (connected === true) {
+      // We're connected - set presence immediately
+      set(userPresenceRef, {
+        connected: true,
+        ts: Date.now()
+      }).then(() => {
+        isPresent = true;
+        console.log('[PRESENCE] Set successfully');
+        
+        // Setup onDisconnect to remove on leave
+        onDisconnect(userPresenceRef).remove().then(() => {
+          console.log('[PRESENCE] onDisconnect registered');
+        }).catch(err => {
+          console.error('[PRESENCE] onDisconnect error:', err);
+        });
       }).catch(err => {
-        console.error('Failed to register onDisconnect:', err);
+        console.error('[PRESENCE] Set error:', err);
       });
-    }).catch(err => {
-      console.error('Failed to set presence:', err);
-    });
-  } else if (connected === false) {
-    isConnected = false;
-  }
-});
-
-// Count connected users - poll every 2 seconds for better reliability
-function updateConnectedCount() {
-  get(ref(db, 'connected_users')).then((snap) => {
-    const users = snap.val() || {};
-    connectedUsers = Object.keys(users).length;
-    document.getElementById('live-count').textContent = connectedUsers;
-    console.log('Connected users:', connectedUsers, users);
-  }).catch(err => {
-    console.error('Error counting users:', err);
+    } else {
+      isPresent = false;
+      console.log('[FIREBASE] Disconnected');
+    }
   });
 }
 
-// Initial count
-updateConnectedCount();
+// Count users - simple polling approach
+let pollCount = 0;
+function pollConnectedUsers() {
+  pollCount++;
+  get(ref(db, 'connected_users'))
+    .then((snap) => {
+      const users = snap.val() || {};
+      const count = Object.keys(users).length;
+      document.getElementById('live-count').textContent = count;
+      console.log(`[POLL #${pollCount}] Connected: ${count}`, users);
+    })
+    .catch((err) => {
+      console.error('[POLL] Error:', err);
+    });
+}
 
-// Update count every 2 seconds
-setInterval(updateConnectedCount, 2000);
+// Start presence and polling
+setupPresence();
+pollConnectedUsers(); // Initial poll
+setInterval(pollConnectedUsers, 1500); // Poll every 1.5 seconds
 
-// Also listen for changes
+// Also add a listener for real-time updates (backup)
 onValue(ref(db, 'connected_users'), (snap) => {
   const users = snap.val() || {};
-  connectedUsers = Object.keys(users).length;
-  document.getElementById('live-count').textContent = connectedUsers;
-  console.log('Live count updated:', connectedUsers);
+  const count = Object.keys(users).length;
+  document.getElementById('live-count').textContent = count;
+  console.log('[LISTENER] Live count:', count, users);
 });
+
+console.log('[INIT] Presence + polling started');
 
 // Listen for active question
 onValue(ref(db, 'active_question'), async (snap) => {
