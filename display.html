@@ -65,23 +65,7 @@ html, body {
 }
 
 /* MAIN */
-.main { flex:1; display:flex; overflow:hidden; height:0; min-height:0; position:relative; }
-
-/* IMAGE OVERLAY */
-#image-area {
-  position:absolute; top:0; left:0; right:0; bottom:0;
-  background:#04080f;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:10;
-}
-#image-area img {
-  max-width:100%;
-  max-height:100%;
-  object-fit:contain;
-  border-radius:12px;
-}
+.main { flex:1; display:flex; overflow:hidden; height:0; min-height:0; }
 
 /* VOTE AREA */
 .vote-area {
@@ -209,6 +193,24 @@ html, body {
   position:absolute; top:50%; transform:translateY(-50%);
   white-space:nowrap; font-size:19px; font-weight:500; color:#e2e8f0;
   will-change:transform;
+}
+
+/* IMAGE OVERLAY - copre topbar + main, sopra tutto */
+#image-area {
+  position:fixed;
+  top:58px; /* altezza topbar */
+  left:0; right:0;
+  bottom:56px; /* altezza ticker */
+  background:#04080f;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:100;
+}
+#image-area img {
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
 }
 </style>
 </head>
