@@ -400,41 +400,65 @@ window.handleImageUpload = async (event) => {
  
  document.getElementById('upload-progress').style.display = 'block';
  let uploaded = 0;
+ let failed = 0;
  
  for (let file of files) {
-  const reader = new FileReader();
-  const promise = new Promise((resolve, reject) => {
-   reader.onload = async (e) => {
-    const dataUrl = e.target.result;
-    
-    // Check size (max 2MB per image)
-    const sizeMB = dataUrl.length / (1024 * 1024);
-    if (sizeMB > 2) {
-     toast(`⚠️ ${file.name} troppo grande (${sizeMB.toFixed(1)}MB). Max 2MB.`, '#f59e0b');
-     resolve();
-     return;
-    }
-    
-    const imgRef = push(ref(db, 'images'));
-    const imgData = {
-     name: file.name,
-     dataUrl: dataUrl,
-     order: window.imageList.length + uploaded,
-     uploadedAt: Date.now()
+  try {
+   const reader = new FileReader();
+   const promise = new Promise((resolve, reject) => {
+    reader.onload = async (e) => {
+     try {
+      const dataUrl = e.target.result;
+      
+      // Check size (max 2MB per image)
+      const sizeMB = dataUrl.length / (1024 * 1024);
+      if (sizeMB > 2) {
+       toast(`⚠️ ${file.name} troppo grande (${sizeMB.toFixed(1)}MB). Max 2MB.`, '#f59e0b');
+       failed++;
+       resolve();
+       return;
+      }
+      
+      console.log(`📤 Uploading ${file.name} (${sizeMB.toFixed(2)}MB)...`);
+      
+      const imgRef = push(ref(db, 'images'));
+      const imgData = {
+       name: file.name,
+       dataUrl: dataUrl,
+       order: window.imageList.length + uploaded,
+       uploadedAt: Date.now()
+      };
+      await set(imgRef, imgData);
+      console.log(`✅ Uploaded ${file.name}`);
+      uploaded++;
+      document.getElementById('upload-count').textContent = `${uploaded}/${files.length}`;
+      resolve();
+     } catch (err) {
+      console.error(`❌ Upload error for ${file.name}:`, err);
+      failed++;
+      resolve(); // Continue with next file
+     }
     };
-    await set(imgRef, imgData);
-    uploaded++;
-    document.getElementById('upload-count').textContent = `${uploaded}/${files.length}`;
-    resolve();
-   };
-   reader.onerror = reject;
-  });
-  reader.readAsDataURL(file);
-  await promise; // Wait for each file sequentially
+    reader.onerror = () => {
+     console.error(`❌ FileReader error for ${file.name}`);
+     failed++;
+     resolve();
+    };
+   });
+   reader.readAsDataURL(file);
+   await promise;
+  } catch (err) {
+   console.error(`❌ Outer error for ${file.name}:`, err);
+   failed++;
+  }
  }
  
  document.getElementById('upload-progress').style.display = 'none';
- toast(`${uploaded} immagine/i caricata/e`, '#22c55e');
+ if (failed > 0) {
+  toast(`⚠️ ${uploaded} caricate, ${failed} fallite. Controlla console (F12)`, '#f59e0b');
+ } else {
+  toast(`${uploaded} immagine/i caricata/e`, '#22c55e');
+ }
  event.target.value = '';
 };
 
