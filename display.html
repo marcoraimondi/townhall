@@ -205,6 +205,8 @@ html, body {
   display:none;
   align-items:center;
   justify-content:center;
+  flex-direction:column;
+  gap:0;
   z-index:10;
 }
 #image-area img, #image-area video {
@@ -256,6 +258,12 @@ html, body {
   <!-- IMAGE OVERLAY (covers entire main area) -->
   <div id="image-area">
     <img id="display-image" src="" alt="Slide">
+    <!-- QR grande: visibile solo quando è proiettato il logo (nessun contenuto) -->
+    <div id="qr-idle-box" style="display:none;flex-direction:column;align-items:center;gap:14px;margin-top:28px;">
+      <div style="font-size:13px;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:#94a3b8;">📱 Scansiona per partecipare</div>
+      <div id="qr-idle-canvas" style="background:#fff;padding:16px;border-radius:16px;"></div>
+      <div id="qr-idle-url" style="font-size:16px;color:#64748b;letter-spacing:1px;"></div>
+    </div>
   </div>
 
   <!-- QUESTION SECTION -->
@@ -598,6 +606,7 @@ function updateDisplayState() {
     qDisplay.style.display = 'none';
     aqDisplay.style.display = 'none';
   }
+  applyQRState();
 }
 
 onValue(ref(db,'active_question'), snap => {
@@ -723,13 +732,33 @@ onValue(ref(db, 'connected_users'), (snap) => {
 // ═══════════════════════════════════════
 // QR LISTENER (dentro il modulo — ha accesso a ref, onValue, db)
 // ═══════════════════════════════════════
-let qrActive = false;
-const QR_BASE_URL = 'https://marcoraimondi.github.io/townhall/';
+let qrIdleRendered = false;
 
 function applyQRState() {
   const panelBox = document.getElementById('qr-panel-box');
-  panelBox.style.display = qrActive ? 'block' : 'none';
+  const idleBox = document.getElementById('qr-idle-box');
+  const hasContent = activeQuestion || activeAudienceQ ||
+    (activeImageIdx !== null && activeImageIdx !== undefined && cachedImages && cachedImages[activeImageIdx]);
+
+  if (!qrActive) {
+    panelBox.style.display = 'none';
+    idleBox.style.display = 'none';
+    return;
+  }
+
+  if (hasContent) {
+    // contenuto proiettato → QR piccolo nel pannello laterale
+    panelBox.style.display = 'block';
+    idleBox.style.display = 'none';
+  } else {
+    // nessun contenuto (schermata logo) → QR grande sotto il logo
+    panelBox.style.display = 'none';
+    idleBox.style.display = 'flex';
+  }
 }
+
+let qrActive = false;
+const QR_BASE_URL = 'https://marcoraimondi.github.io/townhall/';
 
 function startQRListener() {
   onValue(ref(db, 'config/qr_token'), snap => {
@@ -738,11 +767,18 @@ function startQRListener() {
       qrActive = true;
       const url = QR_BASE_URL + '?t=' + d.token;
 
+      // Pannello laterale (piccolo)
       document.getElementById('qr-panel-url').textContent = 'marcoraimondi.github.io/townhall';
       document.getElementById('qr-panel-expiry').textContent = 'Valido fino alle ' + new Date(d.expires_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
       const panelCanvas = document.getElementById('qr-panel-canvas');
       panelCanvas.innerHTML = '';
       new QRCode(panelCanvas, { text: url, width: 110, height: 110, colorDark:'#000000', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.H });
+
+      // QR grande (schermata idle, sotto logo)
+      document.getElementById('qr-idle-url').textContent = 'marcoraimondi.github.io/townhall';
+      const idleCanvas = document.getElementById('qr-idle-canvas');
+      idleCanvas.innerHTML = '';
+      new QRCode(idleCanvas, { text: url, width: 240, height: 240, colorDark:'#000000', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.H });
 
       applyQRState();
     } else {
