@@ -549,6 +549,31 @@ let activeImageIdx = null;
 let cachedImages = null;
 let activeAudienceQ = null;
 let audienceQuestions = {};
+let qrActive = false;
+const QR_BASE_URL = 'https://marcoraimondi.github.io/townhall/';
+
+function applyQRState() {
+  const panelBox = document.getElementById('qr-panel-box');
+  const idleBox = document.getElementById('qr-idle-box');
+  const hasContent = activeQuestion || activeAudienceQ ||
+    (activeImageIdx !== null && activeImageIdx !== undefined && cachedImages && cachedImages[activeImageIdx]);
+
+  console.log('[QR] active:', qrActive, 'hasContent:', !!hasContent);
+
+  if (!qrActive) {
+    panelBox.style.display = 'none';
+    idleBox.style.display = 'none';
+    return;
+  }
+
+  if (hasContent) {
+    panelBox.style.display = 'block';
+    idleBox.style.display = 'none';
+  } else {
+    panelBox.style.display = 'none';
+    idleBox.style.display = 'flex';
+  }
+}
 
 onValue(ref(db,'active_audience_q'), snap => {
   activeAudienceQ = snap.val();
@@ -732,33 +757,6 @@ onValue(ref(db, 'connected_users'), (snap) => {
 // ═══════════════════════════════════════
 // QR LISTENER (dentro il modulo — ha accesso a ref, onValue, db)
 // ═══════════════════════════════════════
-let qrIdleRendered = false;
-
-function applyQRState() {
-  const panelBox = document.getElementById('qr-panel-box');
-  const idleBox = document.getElementById('qr-idle-box');
-  const hasContent = activeQuestion || activeAudienceQ ||
-    (activeImageIdx !== null && activeImageIdx !== undefined && cachedImages && cachedImages[activeImageIdx]);
-
-  if (!qrActive) {
-    panelBox.style.display = 'none';
-    idleBox.style.display = 'none';
-    return;
-  }
-
-  if (hasContent) {
-    // contenuto proiettato → QR piccolo nel pannello laterale
-    panelBox.style.display = 'block';
-    idleBox.style.display = 'none';
-  } else {
-    // nessun contenuto (schermata logo) → QR grande sotto il logo
-    panelBox.style.display = 'none';
-    idleBox.style.display = 'flex';
-  }
-}
-
-let qrActive = false;
-const QR_BASE_URL = 'https://marcoraimondi.github.io/townhall/';
 
 function startQRListener() {
   onValue(ref(db, 'config/qr_token'), snap => {
