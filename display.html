@@ -200,16 +200,14 @@ html, body {
 #image-area {
   position:absolute;
   top:0; left:0; bottom:0;
-  right:340px; /* larghezza sentiment-panel */
+  right:340px;
   background:#04080f;
   display:none;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  gap:0;
+  overflow:hidden;
   z-index:10;
 }
 #image-area img, #image-area video {
+  display:block;
   width:100%;
   height:100%;
   object-fit:contain;
