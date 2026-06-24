@@ -324,6 +324,23 @@
 </head>
 <body>
 
+<!-- AUTH OVERLAY INDEX -->
+<div id="auth-overlay" style="position:fixed;inset:0;background:#0a0f1a;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
+  <div style="text-align:center;">
+    <div style="font-size:32px;font-weight:900;color:#4a7fd4;letter-spacing:2px;">TOWNHALL S&amp;T</div>
+    <div style="font-size:13px;color:#475569;margin-top:6px;">Scansiona il QR code per accedere</div>
+  </div>
+  <div id="auth-error-box" style="background:#1a0a0a;border:1px solid #7f1d1d;border-radius:12px;padding:20px 28px;text-align:center;max-width:300px;display:none;">
+    <div style="font-size:32px;margin-bottom:10px;">⛔</div>
+    <div style="color:#fca5a5;font-size:15px;font-weight:700;">Accesso non autorizzato</div>
+    <div style="color:#94a3b8;font-size:13px;margin-top:6px;">Scansiona il QR code proiettato in sala</div>
+  </div>
+  <div id="auth-checking" style="color:#64748b;font-size:14px;">Verifica accesso...</div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="main-content" style="display:none;">
+
 <!-- LIVE Badge -->
 <div class="live-badge">
   <div class="live-dot"></div>
@@ -748,6 +765,41 @@ window.sendQuestion = function() {
     btn.disabled = false;
   });
 };
+
+// ═══════════════════════════════════════
+// AUTH INDEX — verifica token QR
+// ═══════════════════════════════════════
+(async function checkAuth() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('t');
+
+  // Se già autenticato in sessione, ok diretto
+  if (sessionStorage.getItem('th_audience_auth') === '1') {
+    document.getElementById('auth-overlay').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+    return;
+  }
+
+  if (!token) {
+    document.getElementById('auth-checking').style.display = 'none';
+    document.getElementById('auth-error-box').style.display = 'block';
+    return;
+  }
+
+  // Verifica token su Firebase
+  const snap = await get(ref(db, 'config/qr_token'));
+  const d = snap.val();
+  if (d && d.active && d.token === token && d.expires_at > Date.now()) {
+    sessionStorage.setItem('th_audience_auth', '1');
+    document.getElementById('auth-overlay').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+  } else {
+    document.getElementById('auth-checking').style.display = 'none';
+    document.getElementById('auth-error-box').style.display = 'block';
+  }
+})();
 </script>
+
+</div><!-- /main-content -->
 </body>
 </html>
