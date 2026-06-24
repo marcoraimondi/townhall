@@ -745,6 +745,7 @@ async function doLogin() {
     document.getElementById('login-error').style.display = 'block';
   }
 }
+window.doLogin = doLogin;
 
 function startQRListener() {
   onValue(ref(db, 'config/qr_token'), snap => {
