@@ -721,21 +721,37 @@ onValue(ref(db, 'connected_users'), (snap) => {
   document.getElementById('live-count').textContent = count;
 });
 
-})();
+// ═══════════════════════════════════════
+// QR LISTENER (dentro il modulo — ha accesso a ref, onValue, db)
+// ═══════════════════════════════════════
+function startQRListener() {
+  onValue(ref(db, 'config/qr_token'), snap => {
+    const d = snap.val();
+    const overlay = document.getElementById('qr-overlay');
+    if (d && d.active && d.expires_at > Date.now()) {
+      const url = location.origin + location.pathname.replace('display.html','') + 'index.html?t=' + d.token;
+      document.getElementById('qr-url-label').textContent = url;
+      document.getElementById('qr-expiry').textContent = 'Valido fino alle ' + new Date(d.expires_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+      const wrapper = document.getElementById('qr-canvas-wrapper');
+      wrapper.innerHTML = '';
+      new QRCode(wrapper, { text: url, width: 280, height: 280, colorDark:'#000000', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.H });
+      overlay.style.display = 'flex';
+    } else {
+      overlay.style.display = 'none';
+    }
+  });
+}
+window._startQRListener = startQRListener;
 
-// ═══════════════════════════════════════
-// AUTH DISPLAY
-// ═══════════════════════════════════════
+// Auth: login con hash SHA-256
 async function sha256(message) {
   const msgBuffer = new TextEncoder().encode(message);
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
-
 async function doLogin() {
   const pw = document.getElementById('login-password').value;
-  const db = window._db;
   const hash = await sha256(pw);
   const snap = await get(ref(db, 'config/auth/display_hash'));
   if (snap.exists() && snap.val() === hash) {
@@ -749,31 +765,14 @@ async function doLogin() {
 }
 window.doLogin = doLogin;
 
-function startQRListener() {
-  onValue(ref(db, 'config/qr_token'), snap => {
-    const d = snap.val();
-    const overlay = document.getElementById('qr-overlay');
-    if (d && d.active && d.expires_at > Date.now()) {
-      // Mostra QR fullscreen
-      const url = location.origin + location.pathname.replace('display.html','') + 'index.html?t=' + d.token;
-      document.getElementById('qr-url-label').textContent = url;
-      document.getElementById('qr-expiry').textContent = 'Valido fino alle ' + new Date(d.expires_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
-      // Genera QR con qrcode.js CDN
-      const wrapper = document.getElementById('qr-canvas-wrapper');
-      wrapper.innerHTML = '';
-      new QRCode(wrapper, { text: url, width: 280, height: 280, colorDark:'#000000', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.H });
-      overlay.style.display = 'flex';
-    } else {
-      overlay.style.display = 'none';
-    }
-  });
-}
-
+// Se già autenticato, avvia direttamente
 if (sessionStorage.getItem('th_display_auth') === '1') {
   document.getElementById('login-overlay').style.display = 'none';
   document.getElementById('main-content').style.cssText = 'height:100%;display:flex;flex-direction:column;';
   startQRListener();
 }
+
+})();
 </script>
 </div><!-- /main-content -->
 </body>
