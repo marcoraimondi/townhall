@@ -822,11 +822,13 @@ async function generateQR() {
   document.getElementById('qr-status').innerHTML =
     '✅ QR attivo — scade alle ' + new Date(expiresAt).toLocaleTimeString('it-IT', {hour:'2-digit',minute:'2-digit'});
 }
+window.generateQR = generateQR;
 
 async function revokeQR() {
   await set(ref(db, 'config/qr_token'), { token: '', expires_at: 0, active: false });
   document.getElementById('qr-status').textContent = '⛔ QR revocato';
 }
+window.revokeQR = revokeQR;
 
 // Aggiorna stato QR in tempo reale
 onValue(ref(db, 'config/qr_token'), snap => {
@@ -862,6 +864,7 @@ async function doLogin() {
     document.getElementById('login-error').style.display = 'block';
   }
 }
+window.doLogin = doLogin;
 
 // Check sessione già autenticata
 if (sessionStorage.getItem('th_admin_auth') === '1') {
