@@ -90,6 +90,23 @@
 </head>
 <body>
 
+<!-- LOGIN OVERLAY ADMIN -->
+<div id="login-overlay" style="position:fixed;inset:0;background:#0a0a1a;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
+  <div style="text-align:center;margin-bottom:8px;">
+    <div style="font-size:28px;font-weight:900;color:#4a90e2;letter-spacing:2px;">🎛️ ADMIN</div>
+    <div style="font-size:13px;color:#666;margin-top:4px;">Townhall Strategy &amp; Transformation</div>
+  </div>
+  <div style="background:#111a2e;border:1px solid #1e3a6e;border-radius:14px;padding:28px 32px;width:320px;">
+    <label style="font-size:13px;color:#aaa;margin-bottom:8px;display:block;">Password Admin</label>
+    <input type="password" id="login-password" placeholder="Inserisci password" style="width:100%;background:#0a0a1a;border:1px solid #2a3a5e;border-radius:8px;color:#fff;padding:10px 12px;font-size:15px;margin-bottom:14px;" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()" style="width:100%;background:#1e3a6e;color:#fff;border:none;border-radius:8px;padding:11px;font-size:15px;font-weight:700;cursor:pointer;">Accedi</button>
+    <div id="login-error" style="color:#ef4444;font-size:13px;margin-top:10px;text-align:center;display:none;">Password non corretta</div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="main-content" style="display:none;">
+
 <h1>🎛️ Admin Panel</h1>
 <p class="subtitle">Townhall Strategy & Transformation</p>
 
@@ -173,6 +190,17 @@
   <button id="btn-add-q" class="success">Aggiungi Poll</button>
   <button id="btn-clear-form" class="secondary">Pulisci</button>
  </div>
+</div>
+
+<!-- QR CODE PANEL -->
+<div class="panel">
+ <h2>📱 QR Code Accesso Ospiti</h2>
+ <p style="color:#888;font-size:13px;margin-bottom:14px;">Genera un codice QR valido 4 ore. Sul display apparirà a schermo intero finché non lo chiudi.</p>
+ <div class="btn-row" style="margin-bottom:14px;">
+  <button id="btn-gen-qr" class="success" onclick="generateQR()">🔲 Genera QR</button>
+  <button id="btn-revoke-qr" class="danger" onclick="revokeQR()">✕ Chiudi QR</button>
+ </div>
+ <div id="qr-status" style="font-size:13px;color:#888;"></div>
 </div>
 
 <!-- RESET ALL -->
@@ -783,6 +811,65 @@ function updateNavButtons() {
   ? `${window.activeImageIndex + 1} / ${window.imageList.length}`
   : '—';
 }
+
+// ═══════════════════════════════════════
+// QR CODE
+// ═══════════════════════════════════════
+async function generateQR() {
+  const token = crypto.randomUUID();
+  const expiresAt = Date.now() + 4 * 60 * 60 * 1000; // 4 ore
+  await set(ref(db, 'config/qr_token'), { token, expires_at: expiresAt, active: true });
+  document.getElementById('qr-status').innerHTML =
+    '✅ QR attivo — scade alle ' + new Date(expiresAt).toLocaleTimeString('it-IT', {hour:'2-digit',minute:'2-digit'});
+}
+
+async function revokeQR() {
+  await set(ref(db, 'config/qr_token'), { token: '', expires_at: 0, active: false });
+  document.getElementById('qr-status').textContent = '⛔ QR revocato';
+}
+
+// Aggiorna stato QR in tempo reale
+onValue(ref(db, 'config/qr_token'), snap => {
+  const d = snap.val();
+  const statusEl = document.getElementById('qr-status');
+  if (!statusEl) return;
+  if (d && d.active && d.expires_at > Date.now()) {
+    statusEl.innerHTML = '✅ QR attivo — scade alle ' + new Date(d.expires_at).toLocaleTimeString('it-IT', {hour:'2-digit',minute:'2-digit'});
+  } else if (d && d.active === false) {
+    statusEl.textContent = '⛔ QR non attivo';
+  }
+});
+
+// ═══════════════════════════════════════
+// AUTH ADMIN
+// ═══════════════════════════════════════
+async function sha256(message) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function doLogin() {
+  const pw = document.getElementById('login-password').value;
+  const hash = await sha256(pw);
+  const snap = await get(ref(db, 'config/auth/admin_hash'));
+  if (snap.exists() && snap.val() === hash) {
+    sessionStorage.setItem('th_admin_auth', '1');
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+// Check sessione già autenticata
+if (sessionStorage.getItem('th_admin_auth') === '1') {
+  document.getElementById('login-overlay').style.display = 'none';
+  document.getElementById('main-content').style.display = 'block';
+}
 </script>
+
+</div><!-- /main-content -->
 </body>
 </html>
