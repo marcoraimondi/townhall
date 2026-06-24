@@ -350,6 +350,7 @@ async function waitForChart(ms=5000) {
 // Firebase init inline — no module dependency issues
 const app = initializeApp(window._fbConfig);
 const db = getDatabase(app);
+window._db = db;
 
 // Wait for Chart.js before setting up chart
 await waitForChart();
@@ -734,6 +735,7 @@ async function sha256(message) {
 
 async function doLogin() {
   const pw = document.getElementById('login-password').value;
+  const db = window._db;
   const hash = await sha256(pw);
   const snap = await get(ref(db, 'config/auth/display_hash'));
   if (snap.exists() && snap.val() === hash) {
