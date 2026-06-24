@@ -258,12 +258,14 @@ html, body {
   <!-- IMAGE OVERLAY (covers entire main area) -->
   <div id="image-area">
     <img id="display-image" src="" alt="Slide">
-    <!-- QR grande: visibile solo quando è proiettato il logo (nessun contenuto) -->
-    <div id="qr-idle-box" style="display:none;flex-direction:column;align-items:center;gap:14px;margin-top:28px;">
-      <div style="font-size:13px;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:#94a3b8;">📱 Scansiona per partecipare</div>
-      <div id="qr-idle-canvas" style="background:#fff;padding:16px;border-radius:16px;"></div>
-      <div id="qr-idle-url" style="font-size:16px;color:#64748b;letter-spacing:1px;"></div>
-    </div>
+  </div>
+
+  <!-- QR IDLE BOX: sovrapposto alla vote-area, visibile solo in idle con QR attivo -->
+  <div id="qr-idle-box" style="display:none;position:absolute;top:0;left:0;bottom:0;right:340px;z-index:20;background:#04080f;flex-direction:column;align-items:center;justify-content:center;gap:18px;">
+    <img src="https://marcoraimondi.github.io/townhall/logo.png" style="max-width:55%;max-height:28%;object-fit:contain;">
+    <div style="font-size:14px;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:#94a3b8;margin-top:10px;">📱 Scansiona per partecipare</div>
+    <div id="qr-idle-canvas" style="background:#fff;padding:16px;border-radius:16px;"></div>
+    <div id="qr-idle-url" style="font-size:15px;color:#64748b;letter-spacing:1px;"></div>
   </div>
 
   <!-- QUESTION SECTION -->
@@ -571,7 +573,7 @@ function applyQRState() {
     idleBox.style.display = 'none';
   } else {
     panelBox.style.display = 'none';
-    idleBox.style.display = 'flex';
+    idleBox.style.display = 'flex'; // usa flex perché il div ha flex-direction:column
   }
 }
 
