@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Townhall Strategy & Transformation</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
@@ -214,6 +215,31 @@ html, body {
 </style>
 </head>
 <body>
+
+<!-- LOGIN OVERLAY DISPLAY -->
+<div id="login-overlay" style="position:fixed;inset:0;background:#04080f;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
+  <div style="text-align:center;margin-bottom:8px;">
+    <div style="font-size:28px;font-weight:900;color:#3b82f6;letter-spacing:2px;">📺 DISPLAY</div>
+    <div style="font-size:13px;color:#666;margin-top:4px;">Townhall Strategy &amp; Transformation</div>
+  </div>
+  <div style="background:#071428;border:1px solid #1d4ed8;border-radius:14px;padding:28px 32px;width:320px;">
+    <label style="font-size:13px;color:#aaa;margin-bottom:8px;display:block;">Password Display</label>
+    <input type="password" id="login-password" placeholder="Inserisci password" style="width:100%;background:#04080f;border:1px solid #2a3a5e;border-radius:8px;color:#fff;padding:10px 12px;font-size:15px;margin-bottom:14px;" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()" style="width:100%;background:#1d4ed8;color:#fff;border:none;border-radius:8px;padding:11px;font-size:15px;font-weight:700;cursor:pointer;">Accedi</button>
+    <div id="login-error" style="color:#ef4444;font-size:13px;margin-top:10px;text-align:center;display:none;">Password non corretta</div>
+  </div>
+</div>
+
+<!-- QR OVERLAY (fullscreen) -->
+<div id="qr-overlay" style="position:fixed;inset:0;background:#04080f;z-index:8000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:28px;">
+  <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:2px;">SCANSIONA PER PARTECIPARE</div>
+  <div id="qr-canvas-wrapper" style="background:#fff;padding:20px;border-radius:16px;"></div>
+  <div id="qr-url-label" style="font-size:14px;color:#94a3b8;letter-spacing:1px;"></div>
+  <div id="qr-expiry" style="font-size:13px;color:#64748b;"></div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="main-content" style="display:none;height:100%;display:flex;flex-direction:column;">
 
 <div class="topbar">
   <div class="topbar-left">
@@ -695,6 +721,57 @@ onValue(ref(db, 'connected_users'), (snap) => {
 });
 
 })();
+
+// ═══════════════════════════════════════
+// AUTH DISPLAY
+// ═══════════════════════════════════════
+async function sha256(message) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function doLogin() {
+  const pw = document.getElementById('login-password').value;
+  const hash = await sha256(pw);
+  const snap = await get(ref(db, 'config/auth/display_hash'));
+  if (snap.exists() && snap.val() === hash) {
+    sessionStorage.setItem('th_display_auth', '1');
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('main-content').style.cssText = 'height:100%;display:flex;flex-direction:column;';
+    startQRListener();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+function startQRListener() {
+  onValue(ref(db, 'config/qr_token'), snap => {
+    const d = snap.val();
+    const overlay = document.getElementById('qr-overlay');
+    if (d && d.active && d.expires_at > Date.now()) {
+      // Mostra QR fullscreen
+      const url = location.origin + location.pathname.replace('display.html','') + 'index.html?t=' + d.token;
+      document.getElementById('qr-url-label').textContent = url;
+      document.getElementById('qr-expiry').textContent = 'Valido fino alle ' + new Date(d.expires_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+      // Genera QR con qrcode.js CDN
+      const wrapper = document.getElementById('qr-canvas-wrapper');
+      wrapper.innerHTML = '';
+      new QRCode(wrapper, { text: url, width: 280, height: 280, colorDark:'#000000', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.H });
+      overlay.style.display = 'flex';
+    } else {
+      overlay.style.display = 'none';
+    }
+  });
+}
+
+if (sessionStorage.getItem('th_display_auth') === '1') {
+  document.getElementById('login-overlay').style.display = 'none';
+  document.getElementById('main-content').style.cssText = 'height:100%;display:flex;flex-direction:column;';
+  startQRListener();
+}
 </script>
+</div><!-- /main-content -->
 </body>
 </html>
