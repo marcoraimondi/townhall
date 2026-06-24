@@ -617,17 +617,17 @@ function updateDisplayState() {
     document.getElementById('audience-q-text').textContent = audienceQuestions[activeAudienceQ].text;
     aqDisplay.style.display = 'flex';
   } else if (activeImageIdx !== null && activeImageIdx !== undefined && cachedImages && cachedImages[activeImageIdx]) {
-    // Immagine attiva
+    // Immagine attiva — nasconde la vote-area, immagine va fullscreen nell'area centrale
     document.getElementById('display-image').src = cachedImages[activeImageIdx].dataUrl;
-    imgArea.style.display = 'flex';
-    qArea.style.display = 'flex';
+    imgArea.style.display = 'block';
+    qArea.style.display = 'none';
     qDisplay.style.display = 'none';
     aqDisplay.style.display = 'none';
   } else {
     // Nessuna domanda, nessuna immagine — mostra logo
     document.getElementById('display-image').src = 'https://marcoraimondi.github.io/townhall/logo.png';
-    imgArea.style.display = 'flex';
-    qArea.style.display = 'flex';
+    imgArea.style.display = 'block';
+    qArea.style.display = 'none';
     qDisplay.style.display = 'none';
     aqDisplay.style.display = 'none';
   }
