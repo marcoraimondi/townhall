@@ -231,13 +231,7 @@ html, body {
 </div>
 
 <!-- QR OVERLAY (fullscreen) -->
-<!-- QR OVERLAY FULLSCREEN (quando non c'è altro contenuto) -->
-<div id="qr-overlay" style="position:fixed;inset:0;background:#04080f;z-index:8000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:28px;">
-  <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:2px;">SCANSIONA PER PARTECIPARE</div>
-  <div id="qr-canvas-wrapper" style="background:#fff;padding:20px;border-radius:16px;"></div>
-  <div id="qr-url-label" style="font-size:14px;color:#94a3b8;letter-spacing:1px;"></div>
-  <div id="qr-expiry" style="font-size:13px;color:#64748b;"></div>
-</div>
+<!-- QR overlay rimosso: il QR appare solo nel pannello sentiment -->
 
 <!-- MAIN CONTENT -->
 <div id="main-content" style="display:none;height:100%;display:flex;flex-direction:column;">
@@ -305,11 +299,12 @@ html, body {
       <div class="chart-title">Andamento ultimi 30 min</div>
       <canvas id="sentimentChart"></canvas>
     </div>
-    <!-- QR BOX nel panel (quando c'è già contenuto proiettato) -->
+    <!-- QR BOX nel panel sentiment -->
     <div id="qr-panel-box" style="display:none;margin-top:14px;background:#071428;border:2px solid #1d4ed8;border-radius:14px;padding:14px 10px;text-align:center;">
-      <div style="font-size:10px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#3b82f6;margin-bottom:10px;">Partecipa</div>
+      <div style="font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#3b82f6;margin-bottom:10px;">📱 Partecipa</div>
       <div id="qr-panel-canvas" style="display:inline-block;background:#fff;padding:8px;border-radius:8px;"></div>
       <div id="qr-panel-url" style="font-size:10px;color:#94a3b8;margin-top:8px;word-break:break-all;"></div>
+      <div id="qr-panel-expiry" style="font-size:10px;color:#64748b;margin-top:4px;"></div>
     </div>
   </div>
 
@@ -603,8 +598,6 @@ function updateDisplayState() {
     qDisplay.style.display = 'none';
     aqDisplay.style.display = 'none';
   }
-  // Aggiorna posizione QR in base allo stato attuale
-  applyQRState();
 }
 
 onValue(ref(db,'active_question'), snap => {
@@ -731,28 +724,11 @@ onValue(ref(db, 'connected_users'), (snap) => {
 // QR LISTENER (dentro il modulo — ha accesso a ref, onValue, db)
 // ═══════════════════════════════════════
 let qrActive = false;
+const QR_BASE_URL = 'https://marcoraimondi.github.io/townhall/';
 
 function applyQRState() {
-  const overlay = document.getElementById('qr-overlay');
   const panelBox = document.getElementById('qr-panel-box');
-  const hasContent = activeQuestion || activeAudienceQ ||
-    (activeImageIdx !== null && activeImageIdx !== undefined && cachedImages && cachedImages[activeImageIdx]);
-
-  if (!qrActive) {
-    overlay.style.display = 'none';
-    panelBox.style.display = 'none';
-    return;
-  }
-
-  if (hasContent) {
-    // contenuto proiettato → QR nel pannello laterale
-    overlay.style.display = 'none';
-    panelBox.style.display = 'block';
-  } else {
-    // nessun contenuto → QR fullscreen
-    overlay.style.display = 'flex';
-    panelBox.style.display = 'none';
-  }
+  panelBox.style.display = qrActive ? 'block' : 'none';
 }
 
 function startQRListener() {
@@ -760,20 +736,13 @@ function startQRListener() {
     const d = snap.val();
     if (d && d.active && d.expires_at > Date.now()) {
       qrActive = true;
-      const url = location.origin + location.pathname.replace('display.html','') + 'index.html?t=' + d.token;
+      const url = QR_BASE_URL + '?t=' + d.token;
 
-      // Popola overlay fullscreen
-      document.getElementById('qr-url-label').textContent = url;
-      document.getElementById('qr-expiry').textContent = 'Valido fino alle ' + new Date(d.expires_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
-      const wrapper = document.getElementById('qr-canvas-wrapper');
-      wrapper.innerHTML = '';
-      new QRCode(wrapper, { text: url, width: 280, height: 280, colorDark:'#000000', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.H });
-
-      // Popola anche pannello laterale
-      document.getElementById('qr-panel-url').textContent = url;
+      document.getElementById('qr-panel-url').textContent = 'marcoraimondi.github.io/townhall';
+      document.getElementById('qr-panel-expiry').textContent = 'Valido fino alle ' + new Date(d.expires_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
       const panelCanvas = document.getElementById('qr-panel-canvas');
       panelCanvas.innerHTML = '';
-      new QRCode(panelCanvas, { text: url, width: 100, height: 100, colorDark:'#000000', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.H });
+      new QRCode(panelCanvas, { text: url, width: 110, height: 110, colorDark:'#000000', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.H });
 
       applyQRState();
     } else {
